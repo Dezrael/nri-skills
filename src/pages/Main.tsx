@@ -28,7 +28,7 @@ function Main() {
   useEffect(() => {
     const loadSkills = async () => {
       try {
-        const response = await fetch("/data/skills.json");
+        const response = await fetch("https://nri-backend-two.vercel.app/NRI");
         if (!response.ok) {
           throw new Error("Не удалось загрузить данные заклинаний");
         }
