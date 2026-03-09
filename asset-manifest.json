@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/nri-skills/static/css/main.954bfbcb.css",
-    "main.js": "/nri-skills/static/js/main.96b4e90c.js",
+    "main.js": "/nri-skills/static/js/main.3eb2ee8f.js",
     "static/js/453.9adfb98e.chunk.js": "/nri-skills/static/js/453.9adfb98e.chunk.js",
     "index.html": "/nri-skills/index.html",
     "main.954bfbcb.css.map": "/nri-skills/static/css/main.954bfbcb.css.map",
-    "main.96b4e90c.js.map": "/nri-skills/static/js/main.96b4e90c.js.map",
+    "main.3eb2ee8f.js.map": "/nri-skills/static/js/main.3eb2ee8f.js.map",
     "453.9adfb98e.chunk.js.map": "/nri-skills/static/js/453.9adfb98e.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.954bfbcb.css",
-    "static/js/main.96b4e90c.js"
+    "static/js/main.3eb2ee8f.js"
   ]
 }
