@@ -149,6 +149,10 @@
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
   }
 
+  .skill-card.concentration:hover {
+    border-left-color: #f59e0b;
+  }
+
   .skill-header {
     flex-direction: row;
     justify-content: space-between;
@@ -214,6 +218,93 @@
   }
 
   .stat .value {
+    font-size: 0.9rem;
+  }
+}
+
+/* Активные перезарядки */
+.active-cooldown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.cooldown-badge {
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.cooldown-badge.combat {
+  background: rgba(220, 38, 38, 0.2);
+  border: 2px solid rgba(220, 38, 38, 0.5);
+  color: #fca5a5;
+}
+
+.cooldown-badge.out-combat {
+  background: rgba(59, 130, 246, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  color: #93c5fd;
+}
+
+/* Кнопки использования */
+.skill-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.use-skill-btn {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.use-skill-btn.combat {
+  background: rgba(220, 38, 38, 0.2);
+  border: 2px solid rgba(220, 38, 38, 0.5);
+  color: #fca5a5;
+}
+
+.use-skill-btn.combat:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.use-skill-btn.out-combat {
+  background: rgba(59, 130, 246, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  color: #93c5fd;
+}
+
+.use-skill-btn.out-combat:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.use-skill-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (min-width: 768px) {
+  .skill-actions {
+    flex-direction: row;
+  }
+
+  .use-skill-btn {
+    flex: 1;
     font-size: 0.9rem;
   }
 }

@@ -1,13 +1,50 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
+import {
+  getCooldown,
+  playerUseSkillInCombat,
+  playerUseSkillOutOfCombat,
+  minutesToTimeString,
+} from "../../../utils/cooldownManager";
 import "./SkillCard.css";
 
 interface SkillCardProps {
   skill: PlayerSkill;
+  className: string;
   onSelectSkill: (skill: PlayerSkill) => void;
+  onCooldownChange?: () => void;
 }
 
-const SkillCard: React.FC<SkillCardProps> = ({ skill, onSelectSkill }) => {
+const SkillCard: React.FC<SkillCardProps> = ({
+  skill,
+  className,
+  onSelectSkill,
+  onCooldownChange,
+}) => {
+  const [cooldown, setCooldown] = useState(getCooldown(className, skill.name));
+
+  useEffect(() => {
+    setCooldown(getCooldown(className, skill.name));
+  }, [className, skill.name]);
+
+  const handleUseInCombat = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    playerUseSkillInCombat(className, skill.name, skill.inCombatCooldown);
+    setCooldown(getCooldown(className, skill.name));
+    onCooldownChange?.();
+  };
+
+  const handleUseOutOfCombat = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    playerUseSkillOutOfCombat(className, skill.name, skill.outCombatCooldown);
+    setCooldown(getCooldown(className, skill.name));
+    onCooldownChange?.();
+  };
+
+  const isOnCooldown =
+    !!cooldown && (cooldown.inCombatTurns > 0 || cooldown.outCombatMinutes > 0);
+  const combatCooldownActive = cooldown && cooldown.inCombatTurns > 0;
+  const outCombatCooldownActive = cooldown && cooldown.outCombatMinutes > 0;
   return (
     <div
       className={`skill-card ${skill.concentration ? "concentration" : ""}`}
@@ -69,6 +106,47 @@ const SkillCard: React.FC<SkillCardProps> = ({ skill, onSelectSkill }) => {
       <p className="full-description" style={{ display: "none" }}>
         {skill.description}
       </p>
+
+      {isOnCooldown && (
+        <div className="active-cooldown">
+          {combatCooldownActive && (
+            <div className="cooldown-badge combat">
+              ⚔️ Перезарядка: {cooldown!.inCombatTurns}{" "}
+              {cooldown!.inCombatTurns === 1
+                ? "ход"
+                : cooldown!.inCombatTurns < 5
+                  ? "хода"
+                  : "ходов"}
+            </div>
+          )}
+          {outCombatCooldownActive && (
+            <div className="cooldown-badge out-combat">
+              ⏰ Перезарядка: {minutesToTimeString(cooldown!.outCombatMinutes)}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="skill-actions">
+        <button
+          className="use-skill-btn combat"
+          onClick={handleUseInCombat}
+          disabled={skill.inCombatCooldown === "0" || isOnCooldown}
+        >
+          ⚔️ Использовать в бою
+        </button>
+        <button
+          className="use-skill-btn out-combat"
+          onClick={handleUseOutOfCombat}
+          disabled={
+            skill.outCombatCooldown === "-" ||
+            skill.outCombatCooldown === "∞" ||
+            isOnCooldown
+          }
+        >
+          🏕️ Использовать вне боя
+        </button>
+      </div>
     </div>
   );
 };

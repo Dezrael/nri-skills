@@ -59,3 +59,253 @@
     gap: 1.5rem;
   }
 }
+
+/* Управление временем */
+.time-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.time-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.time-btn.skip-turn {
+  background: rgba(220, 38, 38, 0.2);
+  border: 2px solid rgba(220, 38, 38, 0.5);
+  color: #fca5a5;
+}
+
+.time-btn.skip-turn:hover {
+  background: rgba(220, 38, 38, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.time-btn.skip-time {
+  background: rgba(59, 130, 246, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  color: #93c5fd;
+}
+
+.time-btn.skip-time:hover {
+  background: rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Модальное окно */
+.time-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.time-modal {
+  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+  border: 2px solid rgba(102, 126, 234, 0.5);
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.time-modal h3 {
+  margin: 0 0 1rem 0;
+  color: #667eea;
+  font-size: 1.3rem;
+}
+
+.time-modal p {
+  margin: 0 0 1.5rem 0;
+  color: #a0a0a0;
+  font-size: 0.9rem;
+}
+
+/* Сетка для числовых полей */
+.time-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.time-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0; /* Предотвращает переполнение */
+}
+
+.time-input-group label {
+  color: #a0a0a0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Обертка для input и кнопок */
+.number-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.time-number-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 0.25rem;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e0e0e0;
+  font-size: 1.1rem;
+  text-align: center;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+
+/* Скрываем стрелочки браузера */
+.time-number-input::-webkit-inner-spin-button,
+.time-number-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.time-number-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.time-number-input:hover {
+  border-color: rgba(102, 126, 234, 0.6);
+}
+
+/* Кнопки +/- */
+.number-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border: 2px solid rgba(102, 126, 234, 0.4);
+  border-radius: 6px;
+  background: rgba(102, 126, 234, 0.15);
+  color: #a0b6ff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  user-select: none;
+}
+
+.number-btn:hover {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: #667eea;
+  transform: scale(1.05);
+}
+
+.number-btn:active {
+  transform: scale(0.95);
+  background: rgba(102, 126, 234, 0.4);
+}
+
+.number-btn.decrease {
+  font-size: 1.5rem;
+}
+
+.number-btn.increase {
+  font-size: 1.2rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.confirm-btn,
+.cancel-btn {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.confirm-btn {
+  background: rgba(34, 139, 34, 0.2);
+  border: 2px solid #228b22;
+  color: #32cd32;
+}
+
+.confirm-btn:hover:not(:disabled) {
+  background: rgba(34, 139, 34, 0.3);
+  transform: translateY(-1px);
+}
+
+.confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background: rgba(220, 53, 69, 0.2);
+  border: 2px solid #dc3545;
+  color: #ff6b7a;
+}
+
+.cancel-btn:hover {
+  background: rgba(220, 53, 69, 0.3);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .time-controls {
+    flex-direction: column;
+  }
+
+  .time-btn {
+    width: 100%;
+  }
+
+  .time-modal {
+    padding: 1.5rem;
+  }
+
+  .time-inputs-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+}

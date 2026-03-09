@@ -102,6 +102,7 @@ function Main() {
                 {activeTab === "skills" && (
                   <SkillsList
                     skills={skills}
+                    className={selectedClass || ""}
                     onSelectSkill={setSelectedSkill}
                   />
                 )}
