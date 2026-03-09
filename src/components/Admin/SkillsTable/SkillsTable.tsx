@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
+import { createSkill, deleteSkill, updateSkill } from "../../../api/nriApi";
 import "./SkillsTable.css";
 
 interface SkillsTableProps {
@@ -37,29 +38,62 @@ function SkillsTable({ className, skills, onUpdate }: SkillsTableProps) {
     setIsAdding(false);
   };
 
-  const handleDelete = (index: number) => {
+  const handleDelete = async (index: number) => {
     if (window.confirm("Вы уверены, что хотите удалить это заклинание?")) {
-      const updatedSkills = skills.filter((_, i) => i !== index);
-      onUpdate(updatedSkills);
+      const skillToDelete = skills[index];
+      try {
+        if (skillToDelete?.id) {
+          await deleteSkill(skillToDelete.id);
+        }
+        const updatedSkills = skills.filter((_, i) => i !== index);
+        onUpdate(updatedSkills);
+      } catch (err) {
+        alert(
+          err instanceof Error
+            ? `Ошибка удаления: ${err.message}`
+            : "Ошибка удаления",
+        );
+      }
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingSkill) return;
 
-    if (isAdding) {
-      onUpdate([...skills, editingSkill]);
-    } else {
-      const index = skills.findIndex((s) => s.name === editingSkill.name);
-      if (index !== -1) {
-        const updatedSkills = [...skills];
-        updatedSkills[index] = editingSkill;
-        onUpdate(updatedSkills);
-      }
-    }
+    try {
+      if (isAdding) {
+        const created = await createSkill({
+          ...editingSkill,
+          className,
+        });
+        onUpdate([...skills, created]);
+      } else {
+        if (!editingSkill.id) {
+          throw new Error("У скилла отсутствует ID");
+        }
 
-    setEditingSkill(null);
-    setIsAdding(false);
+        const updatedFromApi = await updateSkill(editingSkill.id, {
+          ...editingSkill,
+          className,
+        });
+
+        const index = skills.findIndex((s) => s.id === editingSkill.id);
+        if (index !== -1) {
+          const updatedSkills = [...skills];
+          updatedSkills[index] = updatedFromApi;
+          onUpdate(updatedSkills);
+        }
+      }
+
+      setEditingSkill(null);
+      setIsAdding(false);
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? `Ошибка сохранения: ${err.message}`
+          : "Ошибка сохранения",
+      );
+    }
   };
 
   const handleCancel = () => {

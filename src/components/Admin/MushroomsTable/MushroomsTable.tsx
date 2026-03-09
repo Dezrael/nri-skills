@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { Mushroom } from "../../../types/PlayerSkill";
+import {
+  createMushroom,
+  deleteMushroom,
+  updateMushroom,
+} from "../../../api/nriApi";
 import "./MushroomsTable.css";
 
 interface MushroomsTableProps {
@@ -33,29 +38,60 @@ function MushroomsTable({
     setIsAdding(false);
   };
 
-  const handleDelete = (index: number) => {
+  const handleDelete = async (index: number) => {
     if (window.confirm("Вы уверены, что хотите удалить этот гриб?")) {
-      const updatedMushrooms = mushrooms.filter((_, i) => i !== index);
-      onUpdate(updatedMushrooms);
+      const mushroomToDelete = mushrooms[index];
+      try {
+        if (mushroomToDelete?.id) {
+          await deleteMushroom(mushroomToDelete.id);
+        }
+        const updatedMushrooms = mushrooms.filter((_, i) => i !== index);
+        onUpdate(updatedMushrooms);
+      } catch (err) {
+        alert(
+          err instanceof Error
+            ? `Ошибка удаления: ${err.message}`
+            : "Ошибка удаления",
+        );
+      }
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingMushroom) return;
 
-    if (isAdding) {
-      onUpdate([...mushrooms, editingMushroom]);
-    } else {
-      const index = mushrooms.findIndex((m) => m.name === editingMushroom.name);
-      if (index !== -1) {
-        const updatedMushrooms = [...mushrooms];
-        updatedMushrooms[index] = editingMushroom;
-        onUpdate(updatedMushrooms);
+    try {
+      if (isAdding) {
+        const created = await createMushroom({
+          ...editingMushroom,
+          className,
+        });
+        onUpdate([...mushrooms, created]);
+      } else {
+        if (!editingMushroom.id) {
+          throw new Error("У гриба отсутствует ID");
+        }
+        const updatedFromApi = await updateMushroom(editingMushroom.id, {
+          ...editingMushroom,
+          className,
+        });
+        const index = mushrooms.findIndex((m) => m.id === editingMushroom.id);
+        if (index !== -1) {
+          const updatedMushrooms = [...mushrooms];
+          updatedMushrooms[index] = updatedFromApi;
+          onUpdate(updatedMushrooms);
+        }
       }
-    }
 
-    setEditingMushroom(null);
-    setIsAdding(false);
+      setEditingMushroom(null);
+      setIsAdding(false);
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? `Ошибка сохранения: ${err.message}`
+          : "Ошибка сохранения",
+      );
+    }
   };
 
   const handleCancel = () => {

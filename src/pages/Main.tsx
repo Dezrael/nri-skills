@@ -11,6 +11,7 @@ import PassivesList from "../components/Passives/PassivesList/PassivesList";
 import MushroomsList from "../components/Mushrooms/MushroomsList/MushroomsList";
 import SkillModal from "../components/Skills/SkillModal/SkillModal";
 import Tabs from "../components/Tabs/Tabs";
+import { fetchAllSkillsData } from "../api/nriApi";
 import "../App.css";
 
 function Main() {
@@ -28,11 +29,7 @@ function Main() {
   useEffect(() => {
     const loadSkills = async () => {
       try {
-        const response = await fetch("https://nri-backend-two.vercel.app/NRI");
-        if (!response.ok) {
-          throw new Error("Не удалось загрузить данные заклинаний");
-        }
-        const data: SkillsDatabase = await response.json();
+        const data: SkillsDatabase = await fetchAllSkillsData();
         setSkillsData(data);
         setLoading(false);
       } catch (err) {
@@ -56,10 +53,18 @@ function Main() {
       setSkills(classData.skills || []);
       setPassives(classData.passives || []);
       setMushrooms(classData.mushrooms || []);
+
+      const hasMushrooms = (classData.mushrooms?.length || 0) > 0;
+      if (!hasMushrooms && activeTab === "mushrooms") {
+        setActiveTab("skills");
+      }
     } else {
       setSkills([]);
       setPassives([]);
       setMushrooms([]);
+      if (activeTab === "mushrooms") {
+        setActiveTab("skills");
+      }
     }
   };
 
@@ -70,10 +75,12 @@ function Main() {
     { id: "passives", label: "Пассивные способности" },
   ];
 
-  const tabs =
-    selectedClass === "Грибомант"
-      ? [...baseTabs, { id: "mushrooms", label: "Грибы" }]
-      : baseTabs;
+  const hasMushroomsForSelectedClass =
+    !!selectedClass && (skillsData[selectedClass]?.mushrooms?.length || 0) > 0;
+
+  const tabs = hasMushroomsForSelectedClass
+    ? [...baseTabs, { id: "mushrooms", label: "Грибы" }]
+    : baseTabs;
 
   return (
     <div className="App">
@@ -109,7 +116,7 @@ function Main() {
                 {activeTab === "passives" && (
                   <PassivesList passives={passives} />
                 )}
-                {activeTab === "mushrooms" && selectedClass === "Грибомант" && (
+                {activeTab === "mushrooms" && hasMushroomsForSelectedClass && (
                   <MushroomsList mushrooms={mushrooms} />
                 )}
               </>

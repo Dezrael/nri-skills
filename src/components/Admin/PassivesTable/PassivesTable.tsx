@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { PassiveAbility } from "../../../types/PlayerSkill";
+import {
+  createPassive,
+  deletePassive,
+  updatePassive,
+} from "../../../api/nriApi";
 import "./PassivesTable.css";
 
 interface PassivesTableProps {
@@ -28,33 +33,64 @@ function PassivesTable({ className, passives, onUpdate }: PassivesTableProps) {
     setIsAdding(false);
   };
 
-  const handleDelete = (index: number) => {
+  const handleDelete = async (index: number) => {
     if (
       window.confirm(
         "Вы уверены, что хотите удалить эту пассивную способность?",
       )
     ) {
-      const updatedPassives = passives.filter((_, i) => i !== index);
-      onUpdate(updatedPassives);
+      const passiveToDelete = passives[index];
+      try {
+        if (passiveToDelete?.id) {
+          await deletePassive(passiveToDelete.id);
+        }
+        const updatedPassives = passives.filter((_, i) => i !== index);
+        onUpdate(updatedPassives);
+      } catch (err) {
+        alert(
+          err instanceof Error
+            ? `Ошибка удаления: ${err.message}`
+            : "Ошибка удаления",
+        );
+      }
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingPassive) return;
 
-    if (isAdding) {
-      onUpdate([...passives, editingPassive]);
-    } else {
-      const index = passives.findIndex((p) => p.name === editingPassive.name);
-      if (index !== -1) {
-        const updatedPassives = [...passives];
-        updatedPassives[index] = editingPassive;
-        onUpdate(updatedPassives);
+    try {
+      if (isAdding) {
+        const created = await createPassive({
+          ...editingPassive,
+          className,
+        });
+        onUpdate([...passives, created]);
+      } else {
+        if (!editingPassive.id) {
+          throw new Error("У пассивки отсутствует ID");
+        }
+        const updatedFromApi = await updatePassive(editingPassive.id, {
+          ...editingPassive,
+          className,
+        });
+        const index = passives.findIndex((p) => p.id === editingPassive.id);
+        if (index !== -1) {
+          const updatedPassives = [...passives];
+          updatedPassives[index] = updatedFromApi;
+          onUpdate(updatedPassives);
+        }
       }
-    }
 
-    setEditingPassive(null);
-    setIsAdding(false);
+      setEditingPassive(null);
+      setIsAdding(false);
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? `Ошибка сохранения: ${err.message}`
+          : "Ошибка сохранения",
+      );
+    }
   };
 
   const handleCancel = () => {

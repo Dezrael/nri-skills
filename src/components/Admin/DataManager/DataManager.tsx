@@ -9,6 +9,7 @@ import ClassSelector from "../../ClassSelector/ClassSelector";
 import SkillsTable from "../SkillsTable";
 import PassivesTable from "../PassivesTable";
 import MushroomsTable from "../MushroomsTable";
+import { fetchAllSkillsData } from "../../../api/nriApi";
 import "./DataManager.css";
 
 function DataManager() {
@@ -22,11 +23,7 @@ function DataManager() {
   useEffect(() => {
     const loadSkills = async () => {
       try {
-        const response = await fetch("https://nri-backend-two.vercel.app/NRI");
-        if (!response.ok) {
-          throw new Error("Не удалось загрузить данные");
-        }
-        const data: SkillsDatabase = await response.json();
+        const data: SkillsDatabase = await fetchAllSkillsData();
         setSkillsData(data);
         setLoading(false);
       } catch (err) {
@@ -42,26 +39,18 @@ function DataManager() {
     loadSkills();
   }, []);
 
-  // Сохранение данных в localStorage (имитация сохранения)
-  const saveData = (newData: SkillsDatabase) => {
-    setSkillsData(newData);
-    localStorage.setItem("skillsData", JSON.stringify(newData));
-    alert("Данные сохранены! (В localStorage для демонстрации)");
-  };
-
-  // Загрузка данных из localStorage
-  const loadFromStorage = () => {
-    const stored = localStorage.getItem("skillsData");
-    if (stored) {
-      try {
-        const data = JSON.parse(stored);
-        setSkillsData(data);
-        alert("Данные загружены из localStorage!");
-      } catch (err) {
-        alert("Ошибка при загрузке данных из localStorage");
-      }
-    } else {
-      alert("Нет сохраненных данных в localStorage");
+  const reloadData = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchAllSkillsData();
+      setSkillsData(data);
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Неизвестная ошибка при загрузке",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,11 +77,8 @@ function DataManager() {
   return (
     <div className="data-manager">
       <div className="data-controls">
-        <button onClick={() => saveData(skillsData)} className="save-btn">
-          💾 Сохранить данные
-        </button>
-        <button onClick={loadFromStorage} className="load-btn">
-          📁 Загрузить из хранилища
+        <button onClick={reloadData} className="load-btn">
+          🔄 Обновить данные с сервера
         </button>
       </div>
 
