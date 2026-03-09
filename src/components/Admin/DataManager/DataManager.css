@@ -1,0 +1,76 @@
+.data-manager {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.data-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.save-btn,
+.load-btn {
+  background: rgba(34, 139, 34, 0.2);
+  border: 2px solid #228b22;
+  color: #32cd32;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.save-btn:hover,
+.load-btn:hover {
+  background: rgba(34, 139, 34, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 139, 34, 0.3);
+}
+
+.admin-tabs {
+  display: flex;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+  justify-content: center;
+}
+
+.admin-tab {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  color: #a0a0a0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+}
+
+.admin-tab:hover {
+  color: #c0c0c0;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.admin-tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+@media (max-width: 768px) {
+  .data-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .admin-tabs {
+    flex-wrap: wrap;
+  }
+
+  .admin-tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}

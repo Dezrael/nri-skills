@@ -1,0 +1,72 @@
+.passive-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: default;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+}
+
+.passive-card {
+  border-color: rgba(102, 126, 234, 0.5);
+  background: rgba(102, 126, 234, 0.1);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.passive-header {
+  margin-bottom: 0.75rem;
+}
+
+.passive-name {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #667eea;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.passive-text {
+  color: #c0c0c0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  flex-grow: 1;
+}
+
+@media (min-width: 768px) {
+  .passive-card {
+    padding: 1.2rem;
+  }
+
+  .passive-card:hover {
+    border-color: rgba(102, 126, 234, 0.7);
+    background: rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+  }
+
+  .passive-name {
+    font-size: 1.15rem;
+  }
+
+  .passive-text {
+    font-size: 0.95rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .passive-card {
+    padding: 1.5rem;
+  }
+
+  .passive-name {
+    font-size: 1.2rem;
+  }
+
+  .passive-text {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,61 @@
+.passives-list-container {
+  margin-top: 1.5rem;
+}
+
+.passives-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.passives-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #667eea;
+}
+
+.passives-count {
+  background: rgba(102, 126, 234, 0.2);
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #a0b6ff;
+}
+
+.passives-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.passives-list.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #a0a0a0;
+  font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  .passives-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .passives-list {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .passives-list {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+  }
+}
