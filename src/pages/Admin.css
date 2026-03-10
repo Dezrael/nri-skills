@@ -1,0 +1,80 @@
+.admin-auth-card {
+  max-width: 520px;
+  margin: 1rem auto;
+  padding: 1.5rem;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-radius: 12px;
+  background: rgba(30, 30, 46, 0.7);
+}
+
+.admin-auth-card h2 {
+  margin: 0 0 0.5rem;
+  color: #a0b6ff;
+}
+
+.admin-auth-card p {
+  margin: 0 0 1rem;
+  color: #c0c0c0;
+  font-size: 0.95rem;
+}
+
+.admin-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-auth-form label {
+  font-weight: 600;
+  color: #cdd8ff;
+}
+
+.admin-auth-form input {
+  padding: 0.75rem;
+  border: 2px solid rgba(102, 126, 234, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+
+.admin-auth-form input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.admin-login-btn,
+.admin-logout-btn {
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.2);
+  color: #bfdbfe;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-session-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(102, 126, 234, 0.35);
+  border-radius: 8px;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+@media (max-width: 768px) {
+  .admin-session-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

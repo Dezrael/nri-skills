@@ -3,17 +3,22 @@ import { Mushroom } from "../../../types/PlayerSkill";
 import {
   createMushroom,
   deleteMushroom,
+  isUnauthorizedError,
   updateMushroom,
 } from "../../../api/nriApi";
 import "./MushroomsTable.css";
 
 interface MushroomsTableProps {
+  authToken: string;
+  onAuthExpired: () => void;
   className: string;
   mushrooms: Mushroom[];
   onUpdate: (mushrooms: Mushroom[]) => void;
 }
 
 function MushroomsTable({
+  authToken,
+  onAuthExpired,
   className,
   mushrooms,
   onUpdate,
@@ -43,11 +48,15 @@ function MushroomsTable({
       const mushroomToDelete = mushrooms[index];
       try {
         if (mushroomToDelete?.id) {
-          await deleteMushroom(mushroomToDelete.id);
+          await deleteMushroom(mushroomToDelete.id, authToken);
         }
         const updatedMushrooms = mushrooms.filter((_, i) => i !== index);
         onUpdate(updatedMushrooms);
       } catch (err) {
+        if (isUnauthorizedError(err)) {
+          onAuthExpired();
+          return;
+        }
         alert(
           err instanceof Error
             ? `Ошибка удаления: ${err.message}`
@@ -62,19 +71,26 @@ function MushroomsTable({
 
     try {
       if (isAdding) {
-        const created = await createMushroom({
-          ...editingMushroom,
-          className,
-        });
+        const created = await createMushroom(
+          {
+            ...editingMushroom,
+            className,
+          },
+          authToken,
+        );
         onUpdate([...mushrooms, created]);
       } else {
         if (!editingMushroom.id) {
           throw new Error("У гриба отсутствует ID");
         }
-        const updatedFromApi = await updateMushroom(editingMushroom.id, {
-          ...editingMushroom,
-          className,
-        });
+        const updatedFromApi = await updateMushroom(
+          editingMushroom.id,
+          {
+            ...editingMushroom,
+            className,
+          },
+          authToken,
+        );
         const index = mushrooms.findIndex((m) => m.id === editingMushroom.id);
         if (index !== -1) {
           const updatedMushrooms = [...mushrooms];
@@ -86,6 +102,10 @@ function MushroomsTable({
       setEditingMushroom(null);
       setIsAdding(false);
     } catch (err) {
+      if (isUnauthorizedError(err)) {
+        onAuthExpired();
+        return;
+      }
       alert(
         err instanceof Error
           ? `Ошибка сохранения: ${err.message}`

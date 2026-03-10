@@ -1,15 +1,28 @@
 import React, { useState } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
-import { createSkill, deleteSkill, updateSkill } from "../../../api/nriApi";
+import {
+  createSkill,
+  deleteSkill,
+  isUnauthorizedError,
+  updateSkill,
+} from "../../../api/nriApi";
 import "./SkillsTable.css";
 
 interface SkillsTableProps {
+  authToken: string;
+  onAuthExpired: () => void;
   className: string;
   skills: PlayerSkill[];
   onUpdate: (skills: PlayerSkill[]) => void;
 }
 
-function SkillsTable({ className, skills, onUpdate }: SkillsTableProps) {
+function SkillsTable({
+  authToken,
+  onAuthExpired,
+  className,
+  skills,
+  onUpdate,
+}: SkillsTableProps) {
   const [editingSkill, setEditingSkill] = useState<PlayerSkill | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -43,11 +56,15 @@ function SkillsTable({ className, skills, onUpdate }: SkillsTableProps) {
       const skillToDelete = skills[index];
       try {
         if (skillToDelete?.id) {
-          await deleteSkill(skillToDelete.id);
+          await deleteSkill(skillToDelete.id, authToken);
         }
         const updatedSkills = skills.filter((_, i) => i !== index);
         onUpdate(updatedSkills);
       } catch (err) {
+        if (isUnauthorizedError(err)) {
+          onAuthExpired();
+          return;
+        }
         alert(
           err instanceof Error
             ? `Ошибка удаления: ${err.message}`
@@ -62,20 +79,27 @@ function SkillsTable({ className, skills, onUpdate }: SkillsTableProps) {
 
     try {
       if (isAdding) {
-        const created = await createSkill({
-          ...editingSkill,
-          className,
-        });
+        const created = await createSkill(
+          {
+            ...editingSkill,
+            className,
+          },
+          authToken,
+        );
         onUpdate([...skills, created]);
       } else {
         if (!editingSkill.id) {
           throw new Error("У скилла отсутствует ID");
         }
 
-        const updatedFromApi = await updateSkill(editingSkill.id, {
-          ...editingSkill,
-          className,
-        });
+        const updatedFromApi = await updateSkill(
+          editingSkill.id,
+          {
+            ...editingSkill,
+            className,
+          },
+          authToken,
+        );
 
         const index = skills.findIndex((s) => s.id === editingSkill.id);
         if (index !== -1) {
@@ -88,6 +112,10 @@ function SkillsTable({ className, skills, onUpdate }: SkillsTableProps) {
       setEditingSkill(null);
       setIsAdding(false);
     } catch (err) {
+      if (isUnauthorizedError(err)) {
+        onAuthExpired();
+        return;
+      }
       alert(
         err instanceof Error
           ? `Ошибка сохранения: ${err.message}`

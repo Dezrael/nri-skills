@@ -8,6 +8,30 @@ import {
 const API_BASE = "https://nri-server.vercel.app/api/v1";
 
 type ApiResponse<T> = { data: T };
+type AuthTokenResponse = { token: string };
+
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.name = "ApiError";
+  }
+}
+
+export const isUnauthorizedError = (error: unknown): boolean =>
+  error instanceof ApiError && (error.status === 401 || error.status === 403);
+
+const withAuthHeader = (token: string, init?: RequestInit): RequestInit => {
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+
+  return {
+    ...init,
+    headers,
+  };
+};
 
 const fetchJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(`${API_BASE}${path}`, init);
@@ -22,7 +46,7 @@ const fetchJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
     } catch {
       // Ignore non-json errors and use default message
     }
-    throw new Error(message);
+    throw new ApiError(message, response.status);
   }
 
   if (response.status === 204) {
@@ -71,53 +95,99 @@ export const fetchAllSkillsData = async (): Promise<SkillsDatabase> => {
   return Object.fromEntries(entries);
 };
 
-export const createSkill = (payload: Omit<PlayerSkill, "id">) =>
-  fetchJson<PlayerSkill>("/skills", {
+export const loginAdmin = (password: string) =>
+  fetchJson<AuthTokenResponse>("/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ password }),
   });
 
-export const updateSkill = (id: number, payload: Partial<PlayerSkill>) =>
-  fetchJson<PlayerSkill>(`/skills/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+export const createSkill = (payload: Omit<PlayerSkill, "id">, token: string) =>
+  fetchJson<PlayerSkill>(
+    "/skills",
+    withAuthHeader(token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  );
 
-export const deleteSkill = (id: number) =>
-  fetchJson<void>(`/skills/${id}`, { method: "DELETE" });
+export const updateSkill = (
+  id: number,
+  payload: Partial<PlayerSkill>,
+  token: string,
+) =>
+  fetchJson<PlayerSkill>(
+    `/skills/${id}`,
+    withAuthHeader(token, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  );
 
-export const createPassive = (payload: Omit<PassiveAbility, "id">) =>
-  fetchJson<PassiveAbility>("/passives", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+export const deleteSkill = (id: number, token: string) =>
+  fetchJson<void>(`/skills/${id}`, withAuthHeader(token, { method: "DELETE" }));
 
-export const updatePassive = (id: number, payload: Partial<PassiveAbility>) =>
-  fetchJson<PassiveAbility>(`/passives/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+export const createPassive = (
+  payload: Omit<PassiveAbility, "id">,
+  token: string,
+) =>
+  fetchJson<PassiveAbility>(
+    "/passives",
+    withAuthHeader(token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  );
 
-export const deletePassive = (id: number) =>
-  fetchJson<void>(`/passives/${id}`, { method: "DELETE" });
+export const updatePassive = (
+  id: number,
+  payload: Partial<PassiveAbility>,
+  token: string,
+) =>
+  fetchJson<PassiveAbility>(
+    `/passives/${id}`,
+    withAuthHeader(token, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  );
 
-export const createMushroom = (payload: Omit<Mushroom, "id">) =>
-  fetchJson<Mushroom>("/mushrooms", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+export const deletePassive = (id: number, token: string) =>
+  fetchJson<void>(
+    `/passives/${id}`,
+    withAuthHeader(token, { method: "DELETE" }),
+  );
 
-export const updateMushroom = (id: number, payload: Partial<Mushroom>) =>
-  fetchJson<Mushroom>(`/mushrooms/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+export const createMushroom = (payload: Omit<Mushroom, "id">, token: string) =>
+  fetchJson<Mushroom>(
+    "/mushrooms",
+    withAuthHeader(token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  );
 
-export const deleteMushroom = (id: number) =>
-  fetchJson<void>(`/mushrooms/${id}`, { method: "DELETE" });
+export const updateMushroom = (
+  id: number,
+  payload: Partial<Mushroom>,
+  token: string,
+) =>
+  fetchJson<Mushroom>(
+    `/mushrooms/${id}`,
+    withAuthHeader(token, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  );
+
+export const deleteMushroom = (id: number, token: string) =>
+  fetchJson<void>(
+    `/mushrooms/${id}`,
+    withAuthHeader(token, { method: "DELETE" }),
+  );

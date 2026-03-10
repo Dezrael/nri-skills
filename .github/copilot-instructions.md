@@ -122,6 +122,32 @@ const { data } = await response.json(); // data: []
 
 ## Admin Endpoints (edit/delete selected items)
 
+Все admin endpoint'ы требуют заголовок:
+
+`Authorization: Bearer <token>`
+
+### POST /api/v1/auth/login
+
+Получить admin token по паролю.
+
+**Body:**
+
+```typescript
+{
+  password: string;
+}
+```
+
+**Response:**
+
+```typescript
+{
+  data: {
+    token: string;
+  }
+}
+```
+
 ### PUT /api/v1/skills/:id
 
 Изменить выбранный скилл.

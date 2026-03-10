@@ -3,17 +3,26 @@ import { PassiveAbility } from "../../../types/PlayerSkill";
 import {
   createPassive,
   deletePassive,
+  isUnauthorizedError,
   updatePassive,
 } from "../../../api/nriApi";
 import "./PassivesTable.css";
 
 interface PassivesTableProps {
+  authToken: string;
+  onAuthExpired: () => void;
   className: string;
   passives: PassiveAbility[];
   onUpdate: (passives: PassiveAbility[]) => void;
 }
 
-function PassivesTable({ className, passives, onUpdate }: PassivesTableProps) {
+function PassivesTable({
+  authToken,
+  onAuthExpired,
+  className,
+  passives,
+  onUpdate,
+}: PassivesTableProps) {
   const [editingPassive, setEditingPassive] = useState<PassiveAbility | null>(
     null,
   );
@@ -42,11 +51,15 @@ function PassivesTable({ className, passives, onUpdate }: PassivesTableProps) {
       const passiveToDelete = passives[index];
       try {
         if (passiveToDelete?.id) {
-          await deletePassive(passiveToDelete.id);
+          await deletePassive(passiveToDelete.id, authToken);
         }
         const updatedPassives = passives.filter((_, i) => i !== index);
         onUpdate(updatedPassives);
       } catch (err) {
+        if (isUnauthorizedError(err)) {
+          onAuthExpired();
+          return;
+        }
         alert(
           err instanceof Error
             ? `Ошибка удаления: ${err.message}`
@@ -61,19 +74,26 @@ function PassivesTable({ className, passives, onUpdate }: PassivesTableProps) {
 
     try {
       if (isAdding) {
-        const created = await createPassive({
-          ...editingPassive,
-          className,
-        });
+        const created = await createPassive(
+          {
+            ...editingPassive,
+            className,
+          },
+          authToken,
+        );
         onUpdate([...passives, created]);
       } else {
         if (!editingPassive.id) {
           throw new Error("У пассивки отсутствует ID");
         }
-        const updatedFromApi = await updatePassive(editingPassive.id, {
-          ...editingPassive,
-          className,
-        });
+        const updatedFromApi = await updatePassive(
+          editingPassive.id,
+          {
+            ...editingPassive,
+            className,
+          },
+          authToken,
+        );
         const index = passives.findIndex((p) => p.id === editingPassive.id);
         if (index !== -1) {
           const updatedPassives = [...passives];
@@ -85,6 +105,10 @@ function PassivesTable({ className, passives, onUpdate }: PassivesTableProps) {
       setEditingPassive(null);
       setIsAdding(false);
     } catch (err) {
+      if (isUnauthorizedError(err)) {
+        onAuthExpired();
+        return;
+      }
       alert(
         err instanceof Error
           ? `Ошибка сохранения: ${err.message}`

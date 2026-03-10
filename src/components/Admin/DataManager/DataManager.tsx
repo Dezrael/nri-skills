@@ -12,7 +12,12 @@ import MushroomsTable from "../MushroomsTable";
 import { fetchAllSkillsData } from "../../../api/nriApi";
 import "./DataManager.css";
 
-function DataManager() {
+interface DataManagerProps {
+  authToken: string;
+  onAuthExpired: () => void;
+}
+
+function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
   const [skillsData, setSkillsData] = useState<SkillsDatabase>({});
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,6 +109,8 @@ function DataManager() {
 
           {activeTab === "skills" && (
             <SkillsTable
+              authToken={authToken}
+              onAuthExpired={onAuthExpired}
               className={selectedClass}
               skills={skillsData[selectedClass]?.skills || []}
               onUpdate={(updatedSkills: PlayerSkill[]) => {
@@ -121,6 +128,8 @@ function DataManager() {
 
           {activeTab === "passives" && (
             <PassivesTable
+              authToken={authToken}
+              onAuthExpired={onAuthExpired}
               className={selectedClass}
               passives={skillsData[selectedClass]?.passives || []}
               onUpdate={(updatedPassives: PassiveAbility[]) => {
@@ -138,6 +147,8 @@ function DataManager() {
 
           {activeTab === "mushrooms" && (
             <MushroomsTable
+              authToken={authToken}
+              onAuthExpired={onAuthExpired}
               className={selectedClass}
               mushrooms={skillsData[selectedClass]?.mushrooms || []}
               onUpdate={(updatedMushrooms: Mushroom[]) => {
