@@ -38,6 +38,39 @@ export class ApiError extends Error {
 export const isUnauthorizedError = (error: unknown): boolean =>
   error instanceof ApiError && (error.status === 401 || error.status === 403);
 
+const stringifyErrorDetails = (details: unknown): string | null => {
+  if (details == null) {
+    return null;
+  }
+
+  if (typeof details === "string") {
+    return details;
+  }
+
+  if (Array.isArray(details)) {
+    const parts = details
+      .map((item) => stringifyErrorDetails(item))
+      .filter((item): item is string => Boolean(item && item.trim()));
+    return parts.length ? parts.join("; ") : null;
+  }
+
+  if (typeof details === "object") {
+    const record = details as Record<string, unknown>;
+
+    if (typeof record.message === "string" && record.message.trim()) {
+      return record.message;
+    }
+
+    const values = Object.values(record)
+      .map((value) => stringifyErrorDetails(value))
+      .filter((value): value is string => Boolean(value && value.trim()));
+
+    return values.length ? values.join("; ") : null;
+  }
+
+  return String(details);
+};
+
 const withAuthHeader = (token: string, init?: RequestInit): RequestInit => {
   const headers = new Headers(init?.headers);
   headers.set("Authorization", `Bearer ${token}`);
@@ -55,8 +88,14 @@ const fetchJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
     let message = `HTTP ${response.status}`;
     try {
       const errorBody = await response.json();
+      const detailsText = stringifyErrorDetails(errorBody?.details);
+
+      if (detailsText) {
+        message = detailsText;
+      }
+
       if (errorBody?.error) {
-        message = errorBody.error;
+        message = detailsText ? `${detailsText}` : errorBody.error;
       }
     } catch {
       // Ignore non-json errors and use default message

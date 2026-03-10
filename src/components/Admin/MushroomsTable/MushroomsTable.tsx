@@ -73,6 +73,14 @@ function MushroomsTable({
   const handleSave = async () => {
     if (!editingMushroom) return;
 
+    if (!editingMushroom.name.trim() || !editingMushroom.baseEffect.trim()) {
+      onNotify(
+        "error",
+        "Заполните обязательные поля: Название и Базовый эффект",
+      );
+      return;
+    }
+
     try {
       if (isAdding) {
         const created = await createMushroom(
@@ -151,7 +159,7 @@ function MushroomsTable({
           <h4>{isAdding ? "Добавление гриба" : "Редактирование гриба"}</h4>
           <div className="form-grid">
             <div className="form-field">
-              <label>Название:</label>
+              <label>Название* :</label>
               <input
                 type="text"
                 value={editingMushroom.name}
@@ -159,7 +167,7 @@ function MushroomsTable({
               />
             </div>
             <div className="form-field full-width">
-              <label>Базовый эффект:</label>
+              <label>Базовый эффект* :</label>
               <textarea
                 value={editingMushroom.baseEffect}
                 onChange={(e) =>

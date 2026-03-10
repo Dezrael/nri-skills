@@ -76,6 +76,11 @@ function PassivesTable({
   const handleSave = async () => {
     if (!editingPassive) return;
 
+    if (!editingPassive.name.trim() || !editingPassive.text.trim()) {
+      onNotify("error", "Заполните обязательные поля: Название и Описание");
+      return;
+    }
+
     try {
       if (isAdding) {
         const created = await createPassive(
@@ -158,7 +163,7 @@ function PassivesTable({
           </h4>
           <div className="form-grid">
             <div className="form-field">
-              <label>Название:</label>
+              <label>Название* :</label>
               <input
                 type="text"
                 value={editingPassive.name}
@@ -166,7 +171,7 @@ function PassivesTable({
               />
             </div>
             <div className="form-field full-width">
-              <label>Описание:</label>
+              <label>Описание* :</label>
               <textarea
                 value={editingPassive.text}
                 onChange={(e) => updateEditingPassive("text", e.target.value)}

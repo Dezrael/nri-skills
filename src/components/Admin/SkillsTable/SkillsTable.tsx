@@ -81,6 +81,18 @@ function SkillsTable({
   const handleSave = async () => {
     if (!editingSkill) return;
 
+    if (
+      !editingSkill.name.trim() ||
+      !editingSkill.shortDescription.trim() ||
+      !editingSkill.description.trim()
+    ) {
+      onNotify(
+        "error",
+        "Заполните обязательные поля: Название, Краткое описание и Полное описание",
+      );
+      return;
+    }
+
     try {
       if (isAdding) {
         const created = await createSkill(
@@ -163,7 +175,7 @@ function SkillsTable({
           </h4>
           <div className="form-grid">
             <div className="form-field">
-              <label>Название:</label>
+              <label>Название* :</label>
               <input
                 type="text"
                 value={editingSkill.name}
@@ -243,7 +255,7 @@ function SkillsTable({
               />
             </div>
             <div className="form-field full-width">
-              <label>Краткое описание:</label>
+              <label>Краткое описание* :</label>
               <textarea
                 value={editingSkill.shortDescription}
                 onChange={(e) =>
@@ -253,7 +265,7 @@ function SkillsTable({
               />
             </div>
             <div className="form-field full-width">
-              <label>Полное описание:</label>
+              <label>Полное описание* :</label>
               <textarea
                 value={editingSkill.description}
                 onChange={(e) =>
