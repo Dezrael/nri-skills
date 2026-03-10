@@ -9,6 +9,7 @@ export type PlayerSkill = {
   durationInCombat: string; // длительность в бою
   durationOutOfCombat: string; // длительность вне боя
   damage: string; // урон или исцеление (например 20+d12)
+  savingThrow?: string; // спасбросок
   inCombatCooldown: string; // перезарядка в бою (количество ходов)
   outCombatCooldown: string; // перезарядка вне боя (любое время: 1 час, 5 минут и т.д.)
   cooldownType?: string; // тип перезарядки

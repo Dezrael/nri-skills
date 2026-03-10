@@ -40,7 +40,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
   const [activeCategoryTab, setActiveCategoryTab] = useState(defaultCategory);
   const [cooldownKey, setCooldownKey] = useState(0);
   const [showTimeModal, setShowTimeModal] = useState(false);
-  const [isControlsExpanded, setIsControlsExpanded] = useState(true);
+  const [isControlsExpanded, setIsControlsExpanded] = useState(false);
   const [pendingRestType, setPendingRestType] = useState<
     "short" | "long" | null
   >(null);

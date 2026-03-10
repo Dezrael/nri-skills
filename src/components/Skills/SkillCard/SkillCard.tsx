@@ -183,6 +183,12 @@ const SkillCard: React.FC<SkillCardProps> = ({
             <span className="value">{skill.damage}</span>
           </div>
         )}
+        {skill.savingThrow && skill.savingThrow !== "-" && (
+          <div className="stat">
+            <span className="label">Спасбросок:</span>
+            <span className="value">{skill.savingThrow}</span>
+          </div>
+        )}
       </div>
 
       <div className="skill-cooldowns">

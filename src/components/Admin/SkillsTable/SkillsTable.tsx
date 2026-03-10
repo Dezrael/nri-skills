@@ -144,6 +144,7 @@ function SkillsTable({
       durationInCombat: "",
       durationOutOfCombat: "",
       damage: "",
+      savingThrow: "",
       inCombatCooldown: "",
       outCombatCooldown: "",
       cooldownType: "",
@@ -543,6 +544,16 @@ function SkillsTable({
                 <option value="До короткого отдыха">До короткого отдыха</option>
                 <option value="До долгого отдыха">До долгого отдыха</option>
               </select>
+            </div>
+            <div className="form-field">
+              <label>Спасбросок:</label>
+              <input
+                type="text"
+                value={editingSkill.savingThrow || ""}
+                onChange={(e) =>
+                  updateEditingSkill("savingThrow", e.target.value)
+                }
+              />
             </div>
             <div className="form-field full-width">
               <label>Краткое описание* :</label>
