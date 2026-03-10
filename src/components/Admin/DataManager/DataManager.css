@@ -12,7 +12,8 @@
 }
 
 .save-btn,
-.load-btn {
+.load-btn,
+.export-btn {
   background: rgba(34, 139, 34, 0.2);
   border: 2px solid #228b22;
   color: #32cd32;
@@ -24,10 +25,22 @@
 }
 
 .save-btn:hover,
-.load-btn:hover {
+.load-btn:hover,
+.export-btn:hover {
   background: rgba(34, 139, 34, 0.3);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(34, 139, 34, 0.3);
+}
+
+.export-btn {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.55);
+  color: #93c5fd;
+}
+
+.export-btn:hover {
+  background: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .admin-tabs {

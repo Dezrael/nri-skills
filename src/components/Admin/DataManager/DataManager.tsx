@@ -63,6 +63,28 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
     setSelectedClass(className);
   };
 
+  const handleExportData = () => {
+    const exportPayload = {
+      exportedAt: new Date().toISOString(),
+      source: "nri-skills-admin",
+      data: skillsData,
+    };
+
+    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+      type: "application/json;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const datePart = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `nri-skills-export-${datePart}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const classes = Object.keys(skillsData);
 
   const tabs = [
@@ -84,6 +106,9 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
       <div className="data-controls">
         <button onClick={reloadData} className="load-btn">
           🔄 Обновить данные с сервера
+        </button>
+        <button onClick={handleExportData} className="export-btn">
+          ⬇️ Экспорт JSON
         </button>
       </div>
 
