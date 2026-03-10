@@ -40,6 +40,10 @@ const SkillsList: React.FC<SkillsListProps> = ({
   const [activeCategoryTab, setActiveCategoryTab] = useState(defaultCategory);
   const [cooldownKey, setCooldownKey] = useState(0);
   const [showTimeModal, setShowTimeModal] = useState(false);
+  const [isControlsExpanded, setIsControlsExpanded] = useState(true);
+  const [pendingRestType, setPendingRestType] = useState<
+    "short" | "long" | null
+  >(null);
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
@@ -100,11 +104,12 @@ const SkillsList: React.FC<SkillsListProps> = ({
       });
 
   const handleSkipTurn = () => {
+    setPendingRestType(null);
     skipTurn();
     setCooldownKey((prev) => prev + 1); // Trigger re-render
   };
 
-  const handleShortRest = () => {
+  const restoreShortRestCharges = () => {
     let restoredAny = false;
 
     chosenSkills.forEach((skill) => {
@@ -128,7 +133,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
     }
   };
 
-  const handleLongRest = () => {
+  const restoreLongRestCharges = () => {
     let restoredAny = false;
 
     chosenSkills.forEach((skill) => {
@@ -151,9 +156,35 @@ const SkillsList: React.FC<SkillsListProps> = ({
     }
   };
 
+  const handleShortRest = () => {
+    setPendingRestType("short");
+  };
+
+  const handleLongRest = () => {
+    setPendingRestType("long");
+  };
+
+  const handleConfirmRest = () => {
+    if (pendingRestType === "short") {
+      restoreShortRestCharges();
+    }
+
+    if (pendingRestType === "long") {
+      restoreLongRestCharges();
+    }
+
+    setPendingRestType(null);
+  };
+
+  const handleToggleControls = () => {
+    setIsControlsExpanded((prev) => !prev);
+    setPendingRestType(null);
+  };
+
   const handleSkipTime = () => {
     const totalMinutes = days * 24 * 60 + hours * 60 + minutes;
     if (totalMinutes > 0) {
+      setPendingRestType(null);
       const parts: string[] = [];
       if (days > 0)
         parts.push(
@@ -185,45 +216,118 @@ const SkillsList: React.FC<SkillsListProps> = ({
     <div className="skills-list-container">
       <div className="skills-header">
         <h2>Выбранные заклинания</h2>
-        <div className="time-controls">
-          <button onClick={handleSkipTurn} className="time-btn skip-turn">
-            <span
-              className="material-symbols-rounded btn-icon"
-              aria-hidden="true"
-            >
-              swords
-            </span>
-            Пропустить ход
-          </button>
+      </div>
+
+      <div className="floating-controls-shell">
+        {pendingRestType && (
+          <div
+            className="rest-confirm-popover"
+            role="dialog"
+            aria-modal="false"
+          >
+            <p className="rest-confirm-text">
+              {pendingRestType === "short"
+                ? "Восстановить заряды после короткого отдыха?"
+                : "Восстановить все заряды после долгого отдыха?"}
+            </p>
+            <div className="rest-confirm-actions">
+              <button
+                type="button"
+                className="rest-confirm-btn confirm"
+                onClick={handleConfirmRest}
+              >
+                Да
+              </button>
+              <button
+                type="button"
+                className="rest-confirm-btn cancel"
+                onClick={() => setPendingRestType(null)}
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div
+          className={`time-controls floating-time-controls ${
+            isControlsExpanded ? "expanded" : "collapsed"
+          }`}
+        >
+          {isControlsExpanded && (
+            <>
+              <button
+                onClick={handleSkipTurn}
+                className="time-btn skip-turn icon-only-time-btn"
+                title="Пропустить ход"
+                aria-label="Пропустить ход"
+              >
+                <span
+                  className="material-symbols-rounded btn-icon"
+                  aria-hidden="true"
+                >
+                  swords
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  setPendingRestType(null);
+                  setShowTimeModal(true);
+                }}
+                className="time-btn skip-time icon-only-time-btn"
+                title="Пропустить время"
+                aria-label="Пропустить время"
+              >
+                <span
+                  className="material-symbols-rounded btn-icon"
+                  aria-hidden="true"
+                >
+                  schedule
+                </span>
+              </button>
+              <button
+                onClick={handleShortRest}
+                className="time-btn short-rest icon-only-time-btn"
+                title="Короткий отдых"
+                aria-label="Короткий отдых"
+              >
+                <span
+                  className="material-symbols-rounded btn-icon"
+                  aria-hidden="true"
+                >
+                  hotel
+                </span>
+              </button>
+              <button
+                onClick={handleLongRest}
+                className="time-btn long-rest icon-only-time-btn"
+                title="Долгий отдых"
+                aria-label="Долгий отдых"
+              >
+                <span
+                  className="material-symbols-rounded btn-icon"
+                  aria-hidden="true"
+                >
+                  bedtime
+                </span>
+              </button>
+            </>
+          )}
+
           <button
-            onClick={() => setShowTimeModal(true)}
-            className="time-btn skip-time"
+            onClick={handleToggleControls}
+            className="time-btn dock-toggle-btn"
+            title={isControlsExpanded ? "Свернуть панель" : "Развернуть панель"}
+            aria-label={
+              isControlsExpanded ? "Свернуть панель" : "Развернуть панель"
+            }
           >
             <span
               className="material-symbols-rounded btn-icon"
               aria-hidden="true"
             >
-              schedule
+              {isControlsExpanded ? "close" : "tune"}
             </span>
-            Пропустить время
-          </button>
-          <button onClick={handleShortRest} className="time-btn short-rest">
-            <span
-              className="material-symbols-rounded btn-icon"
-              aria-hidden="true"
-            >
-              hotel
-            </span>
-            Короткий отдых
-          </button>
-          <button onClick={handleLongRest} className="time-btn long-rest">
-            <span
-              className="material-symbols-rounded btn-icon"
-              aria-hidden="true"
-            >
-              bedtime
-            </span>
-            Долгий отдых
           </button>
         </div>
       </div>
