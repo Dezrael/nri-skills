@@ -3,6 +3,8 @@
 export interface CooldownData {
   inCombatTurns: number; // Оставшиеся ходы в бою
   outCombatMinutes: number; // Оставшееся время вне боя в минутах
+  durationInCombatTurns: number; // Оставшаяся длительность в бою (ходы)
+  durationOutCombatMinutes: number; // Оставшаяся длительность вне боя (минуты)
 }
 
 export interface SkillChargesData {
@@ -74,7 +76,9 @@ const cleanupExpiredCooldowns = (cooldowns: Record<string, CooldownData>) => {
   Object.keys(cooldowns).forEach((key) => {
     if (
       cooldowns[key].inCombatTurns <= 0 &&
-      cooldowns[key].outCombatMinutes <= 0
+      cooldowns[key].outCombatMinutes <= 0 &&
+      cooldowns[key].durationInCombatTurns <= 0 &&
+      cooldowns[key].durationOutCombatMinutes <= 0
     ) {
       delete cooldowns[key];
       removedAny = true;
@@ -86,7 +90,19 @@ const cleanupExpiredCooldowns = (cooldowns: Record<string, CooldownData>) => {
 
 // Получить все перезарядки из localStorage
 export const getAllCooldowns = (): Record<string, CooldownData> => {
-  return parseStoredRecord<CooldownData>(STORAGE_KEY);
+  const parsed = parseStoredRecord<Partial<CooldownData>>(STORAGE_KEY);
+  const normalized: Record<string, CooldownData> = {};
+
+  Object.entries(parsed).forEach(([key, value]) => {
+    normalized[key] = {
+      inCombatTurns: value?.inCombatTurns || 0,
+      outCombatMinutes: value?.outCombatMinutes || 0,
+      durationInCombatTurns: value?.durationInCombatTurns || 0,
+      durationOutCombatMinutes: value?.durationOutCombatMinutes || 0,
+    };
+  });
+
+  return normalized;
 };
 
 // Сохранить все перезарядки в localStorage
@@ -135,6 +151,28 @@ export const consumeSkillCharge = (
   return nextCharges;
 };
 
+export const restoreSkillCharges = (
+  className: string,
+  skillName: string,
+  maxCharges: string,
+): SkillChargesData | null => {
+  const parsedMaxCharges = parseMaxCharges(maxCharges);
+  if (parsedMaxCharges === null) {
+    return null;
+  }
+
+  const restoredCharges: SkillChargesData = {
+    current: parsedMaxCharges,
+    max: parsedMaxCharges,
+  };
+
+  const allCharges = getAllSkillCharges();
+  allCharges[getSkillKey(className, skillName)] = restoredCharges;
+  saveAllSkillCharges(allCharges);
+
+  return restoredCharges;
+};
+
 // Установить перезарядку заклинания
 export const setCooldown = (
   className: string,
@@ -159,9 +197,9 @@ export const removeCooldown = (className: string, skillName: string) => {
 export const timeStringToMinutes = (timeStr: string): number => {
   if (!timeStr || timeStr === "-" || timeStr === "∞") return 0;
 
-  const hoursMatch = timeStr.match(/(\d+)\s*(час|hours?)/i);
-  const minutesMatch = timeStr.match(/(\d+)\s*(минут|minutes?)/i);
-  const daysMatch = timeStr.match(/(\d+)\s*(дней|день|days?)/i);
+  const hoursMatch = timeStr.match(/(\d+)\s*(час|часа|часов|hours?)/i);
+  const minutesMatch = timeStr.match(/(\d+)\s*(минута|минуты|минут|minutes?)/i);
+  const daysMatch = timeStr.match(/(\d+)\s*(день|дня|дней|days?)/i);
 
   let totalMinutes = 0;
 
@@ -210,14 +248,22 @@ export const playerUseSkillInCombat = (
   className: string,
   skillName: string,
   cooldownTurns: string,
+  durationTurns: string,
 ) => {
   const turns = parseInt(cooldownTurns);
   if (isNaN(turns) || turns <= 0) return;
+
+  const duration = Number.parseInt(durationTurns, 10);
 
   const currentCooldown = getCooldown(className, skillName);
   setCooldown(className, skillName, {
     inCombatTurns: turns,
     outCombatMinutes: currentCooldown?.outCombatMinutes || 0,
+    durationInCombatTurns:
+      Number.isFinite(duration) && duration > 0
+        ? duration
+        : currentCooldown?.durationInCombatTurns || 0,
+    durationOutCombatMinutes: currentCooldown?.durationOutCombatMinutes || 0,
   });
 };
 
@@ -226,14 +272,22 @@ export const playerUseSkillOutOfCombat = (
   className: string,
   skillName: string,
   cooldownStr: string,
+  durationStr: string,
 ) => {
   const minutes = timeStringToMinutes(cooldownStr);
   if (minutes <= 0) return;
+
+  const durationMinutes = timeStringToMinutes(durationStr);
 
   const currentCooldown = getCooldown(className, skillName);
   setCooldown(className, skillName, {
     inCombatTurns: currentCooldown?.inCombatTurns || 0,
     outCombatMinutes: minutes,
+    durationInCombatTurns: currentCooldown?.durationInCombatTurns || 0,
+    durationOutCombatMinutes:
+      durationMinutes > 0
+        ? durationMinutes
+        : currentCooldown?.durationOutCombatMinutes || 0,
   });
 };
 
@@ -245,6 +299,11 @@ export const skipTurn = () => {
   Object.keys(cooldowns).forEach((key) => {
     if (cooldowns[key].inCombatTurns > 0) {
       cooldowns[key].inCombatTurns -= 1;
+      changed = true;
+    }
+
+    if (cooldowns[key].durationInCombatTurns > 0) {
+      cooldowns[key].durationInCombatTurns -= 1;
       changed = true;
     }
   });
@@ -271,6 +330,14 @@ export const skipTime = (timeStr: string) => {
       cooldowns[key].outCombatMinutes = Math.max(
         0,
         cooldowns[key].outCombatMinutes - minutesToSkip,
+      );
+      changed = true;
+    }
+
+    if (cooldowns[key].durationOutCombatMinutes > 0) {
+      cooldowns[key].durationOutCombatMinutes = Math.max(
+        0,
+        cooldowns[key].durationOutCombatMinutes - minutesToSkip,
       );
       changed = true;
     }

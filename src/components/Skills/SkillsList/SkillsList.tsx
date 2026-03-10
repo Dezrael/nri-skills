@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
 import SkillCard from "../SkillCard/SkillCard";
-import { skipTurn, skipTime } from "../../../utils/cooldownManager";
+import {
+  restoreSkillCharges,
+  skipTurn,
+  skipTime,
+} from "../../../utils/cooldownManager";
 import Tabs from "../../Tabs/Tabs";
 import "./SkillsList.css";
 
@@ -100,6 +104,53 @@ const SkillsList: React.FC<SkillsListProps> = ({
     setCooldownKey((prev) => prev + 1); // Trigger re-render
   };
 
+  const handleShortRest = () => {
+    let restoredAny = false;
+
+    chosenSkills.forEach((skill) => {
+      const hasCharges = (Number(skill.outCombatCharges) || 0) > 0;
+      const cooldownType = skill.cooldownType?.trim().toLowerCase();
+
+      if (hasCharges && cooldownType === "до короткого отдыха") {
+        const restored = restoreSkillCharges(
+          className,
+          skill.name,
+          skill.outCombatCharges,
+        );
+        if (restored) {
+          restoredAny = true;
+        }
+      }
+    });
+
+    if (restoredAny) {
+      setCooldownKey((prev) => prev + 1);
+    }
+  };
+
+  const handleLongRest = () => {
+    let restoredAny = false;
+
+    chosenSkills.forEach((skill) => {
+      const hasCharges = (Number(skill.outCombatCharges) || 0) > 0;
+
+      if (hasCharges) {
+        const restored = restoreSkillCharges(
+          className,
+          skill.name,
+          skill.outCombatCharges,
+        );
+        if (restored) {
+          restoredAny = true;
+        }
+      }
+    });
+
+    if (restoredAny) {
+      setCooldownKey((prev) => prev + 1);
+    }
+  };
+
   const handleSkipTime = () => {
     const totalMinutes = days * 24 * 60 + hours * 60 + minutes;
     if (totalMinutes > 0) {
@@ -155,6 +206,24 @@ const SkillsList: React.FC<SkillsListProps> = ({
               schedule
             </span>
             Пропустить время
+          </button>
+          <button onClick={handleShortRest} className="time-btn short-rest">
+            <span
+              className="material-symbols-rounded btn-icon"
+              aria-hidden="true"
+            >
+              hotel
+            </span>
+            Короткий отдых
+          </button>
+          <button onClick={handleLongRest} className="time-btn long-rest">
+            <span
+              className="material-symbols-rounded btn-icon"
+              aria-hidden="true"
+            >
+              bedtime
+            </span>
+            Долгий отдых
           </button>
         </div>
       </div>

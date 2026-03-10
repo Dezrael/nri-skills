@@ -136,6 +136,30 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+.time-btn.short-rest {
+  background: rgba(245, 158, 11, 0.2);
+  border: 2px solid rgba(245, 158, 11, 0.5);
+  color: #fcd34d;
+}
+
+.time-btn.short-rest:hover {
+  background: rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.time-btn.long-rest {
+  background: rgba(16, 185, 129, 0.2);
+  border: 2px solid rgba(16, 185, 129, 0.5);
+  color: #6ee7b7;
+}
+
+.time-btn.long-rest:hover {
+  background: rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
 /* Модальное окно */
 .time-modal-overlay {
   position: fixed;

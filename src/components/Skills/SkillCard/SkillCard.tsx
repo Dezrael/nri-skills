@@ -54,7 +54,12 @@ const SkillCard: React.FC<SkillCardProps> = ({
       setCharges(nextCharges);
     }
 
-    playerUseSkillInCombat(className, skill.name, skill.inCombatCooldown);
+    playerUseSkillInCombat(
+      className,
+      skill.name,
+      skill.inCombatCooldown,
+      skill.durationInCombat,
+    );
     setCooldown(getCooldown(className, skill.name));
     onCooldownChange?.();
   };
@@ -76,7 +81,12 @@ const SkillCard: React.FC<SkillCardProps> = ({
       setCharges(nextCharges);
     }
 
-    playerUseSkillOutOfCombat(className, skill.name, skill.outCombatCooldown);
+    playerUseSkillOutOfCombat(
+      className,
+      skill.name,
+      skill.outCombatCooldown,
+      skill.durationOutOfCombat,
+    );
     setCooldown(getCooldown(className, skill.name));
     onCooldownChange?.();
   };
@@ -88,8 +98,15 @@ const SkillCard: React.FC<SkillCardProps> = ({
 
   const isOnCooldown =
     !!cooldown && (cooldown.inCombatTurns > 0 || cooldown.outCombatMinutes > 0);
+  const hasActiveDuration =
+    !!cooldown &&
+    (cooldown.durationInCombatTurns > 0 ||
+      cooldown.durationOutCombatMinutes > 0);
   const combatCooldownActive = cooldown && cooldown.inCombatTurns > 0;
   const outCombatCooldownActive = cooldown && cooldown.outCombatMinutes > 0;
+  const combatDurationActive = cooldown && cooldown.durationInCombatTurns > 0;
+  const outCombatDurationActive =
+    cooldown && cooldown.durationOutCombatMinutes > 0;
   const inCombatCooldownValue = Number(skill.inCombatCooldown);
   const hasNumericInCombatCooldown = Number.isFinite(inCombatCooldownValue);
   const canUseInCombat =
@@ -192,8 +209,36 @@ const SkillCard: React.FC<SkillCardProps> = ({
         {skill.description}
       </p>
 
-      {isOnCooldown && (
+      {(hasActiveDuration || isOnCooldown) && (
         <div className="active-cooldown">
+          {combatDurationActive && (
+            <div className="cooldown-badge duration combat">
+              <span
+                className="material-symbols-rounded inline-icon"
+                aria-hidden="true"
+              >
+                timer
+              </span>{" "}
+              Длительность в бою: {cooldown!.durationInCombatTurns}{" "}
+              {cooldown!.durationInCombatTurns === 1
+                ? "ход"
+                : cooldown!.durationInCombatTurns < 5
+                  ? "хода"
+                  : "ходов"}
+            </div>
+          )}
+          {outCombatDurationActive && (
+            <div className="cooldown-badge duration out-combat">
+              <span
+                className="material-symbols-rounded inline-icon"
+                aria-hidden="true"
+              >
+                timer
+              </span>{" "}
+              Длительность вне боя:{" "}
+              {minutesToTimeString(cooldown!.durationOutCombatMinutes)}
+            </div>
+          )}
           {combatCooldownActive && (
             <div className="cooldown-badge combat">
               <span

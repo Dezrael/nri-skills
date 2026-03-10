@@ -289,6 +289,10 @@
   text-align: center;
 }
 
+.cooldown-badge.duration {
+  opacity: 0.92;
+}
+
 .inline-icon {
   font-size: 1rem;
   vertical-align: middle;
