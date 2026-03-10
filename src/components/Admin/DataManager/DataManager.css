@@ -13,7 +13,8 @@
 
 .save-btn,
 .load-btn,
-.export-btn {
+.export-btn,
+.import-btn {
   background: rgba(34, 139, 34, 0.2);
   border: 2px solid #228b22;
   color: #32cd32;
@@ -26,7 +27,8 @@
 
 .save-btn:hover,
 .load-btn:hover,
-.export-btn:hover {
+.export-btn:hover,
+.import-btn:hover {
   background: rgba(34, 139, 34, 0.3);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(34, 139, 34, 0.3);
@@ -41,6 +43,21 @@
 .export-btn:hover {
   background: rgba(59, 130, 246, 0.3);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.import-btn {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.55);
+  color: #fcd34d;
+}
+
+.import-btn:hover {
+  background: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.import-input-hidden {
+  display: none;
 }
 
 .admin-tabs {

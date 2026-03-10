@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   PlayerSkill,
   SkillsDatabase,
@@ -9,7 +9,11 @@ import ClassSelector from "../../ClassSelector/ClassSelector";
 import SkillsTable from "../SkillsTable";
 import PassivesTable from "../PassivesTable";
 import MushroomsTable from "../MushroomsTable";
-import { fetchAllSkillsData } from "../../../api/nriApi";
+import {
+  bulkImportData,
+  fetchAllSkillsData,
+  isUnauthorizedError,
+} from "../../../api/nriApi";
 import "./DataManager.css";
 
 interface DataManagerProps {
@@ -23,6 +27,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("skills");
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   // Загрузка данных из JSON при загрузке
   useEffect(() => {
@@ -85,6 +90,98 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
     URL.revokeObjectURL(url);
   };
 
+  const normalizeImportedData = (raw: unknown): SkillsDatabase => {
+    const maybeWrapped = raw as { data?: unknown };
+    const data = maybeWrapped?.data ?? raw;
+
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new Error("Некорректный формат JSON");
+    }
+
+    const result: SkillsDatabase = {};
+    Object.entries(data as Record<string, unknown>).forEach(
+      ([className, value]) => {
+        const classData = value as {
+          skills?: unknown;
+          passives?: unknown;
+          mushrooms?: unknown;
+        };
+
+        result[className] = {
+          skills: Array.isArray(classData.skills)
+            ? (classData.skills as PlayerSkill[])
+            : [],
+          passives: Array.isArray(classData.passives)
+            ? (classData.passives as PassiveAbility[])
+            : [],
+          mushrooms: Array.isArray(classData.mushrooms)
+            ? (classData.mushrooms as Mushroom[])
+            : [],
+        };
+      },
+    );
+
+    return result;
+  };
+
+  const handleImportClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleImportFile = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text) as unknown;
+      const normalized = normalizeImportedData(parsed);
+
+      if (Object.keys(normalized).length === 0) {
+        throw new Error("В файле нет данных классов");
+      }
+
+      const parsedObject = parsed as {
+        exportedAt?: unknown;
+        source?: unknown;
+      };
+
+      const payload = {
+        exportedAt:
+          typeof parsedObject.exportedAt === "string"
+            ? parsedObject.exportedAt
+            : new Date().toISOString(),
+        source:
+          typeof parsedObject.source === "string"
+            ? parsedObject.source
+            : "nri-skills-admin-import",
+        data: normalized,
+      };
+
+      const result = await bulkImportData(payload, authToken);
+      await reloadData();
+      setSelectedClass(null);
+      setActiveTab("skills");
+
+      alert(
+        `Импорт завершен: классов ${result.classes}, скиллов ${result.skills}, пассивок ${result.passives}, грибов ${result.mushrooms}.`,
+      );
+    } catch (err) {
+      if (isUnauthorizedError(err)) {
+        onAuthExpired();
+        return;
+      }
+      alert(
+        err instanceof Error
+          ? `Ошибка импорта: ${err.message}`
+          : "Ошибка импорта JSON",
+      );
+    }
+  };
+
   const classes = Object.keys(skillsData);
 
   const tabs = [
@@ -110,6 +207,16 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
         <button onClick={handleExportData} className="export-btn">
           ⬇️ Экспорт JSON
         </button>
+        <button onClick={handleImportClick} className="import-btn">
+          ⬆️ Импорт JSON
+        </button>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept="application/json,.json"
+          onChange={handleImportFile}
+          className="import-input-hidden"
+        />
       </div>
 
       <ClassSelector

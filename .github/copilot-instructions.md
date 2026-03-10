@@ -148,6 +148,53 @@ const { data } = await response.json(); // data: []
 }
 ```
 
+### POST /api/v1/auth/bulk-import
+
+Заменить все данные в БД (skills, passives, mushrooms) на данные из экспортированного JSON.
+
+Требует admin token в заголовке `Authorization: Bearer <token>`.
+
+**Body:**
+
+```typescript
+{
+  exportedAt: string;
+  source: string;
+  data: Record<
+    string,
+    {
+      skills: Array<
+        Omit<Skill, "id" | "createdAt" | "updatedAt"> &
+          Partial<Pick<Skill, "id" | "createdAt" | "updatedAt">>
+      >;
+      passives: Array<
+        Omit<Passive, "id" | "createdAt" | "updatedAt"> &
+          Partial<Pick<Passive, "id" | "createdAt" | "updatedAt">>
+      >;
+      mushrooms: Array<
+        Omit<Mushroom, "id" | "createdAt" | "updatedAt"> &
+          Partial<Pick<Mushroom, "id" | "createdAt" | "updatedAt">>
+      >;
+    }
+  >;
+}
+```
+
+**Response:**
+
+```typescript
+{
+  data: {
+    importedAt: string;
+    source: string;
+    classes: number;
+    skills: number;
+    passives: number;
+    mushrooms: number;
+  }
+}
+```
+
 ### PUT /api/v1/skills/:id
 
 Изменить выбранный скилл.

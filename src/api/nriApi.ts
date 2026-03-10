@@ -10,6 +10,21 @@ const API_BASE = "https://nri-server.vercel.app/api/v1";
 type ApiResponse<T> = { data: T };
 type AuthTokenResponse = { token: string };
 
+type BulkImportPayload = {
+  exportedAt: string;
+  source: string;
+  data: SkillsDatabase;
+};
+
+type BulkImportResult = {
+  importedAt: string;
+  source: string;
+  classes: number;
+  skills: number;
+  passives: number;
+  mushrooms: number;
+};
+
 export class ApiError extends Error {
   status: number;
 
@@ -101,6 +116,16 @@ export const loginAdmin = (password: string) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password }),
   });
+
+export const bulkImportData = (payload: BulkImportPayload, token: string) =>
+  fetchJson<BulkImportResult>(
+    "/auth/bulk-import",
+    withAuthHeader(token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  );
 
 export const createSkill = (payload: Omit<PlayerSkill, "id">, token: string) =>
   fetchJson<PlayerSkill>(
