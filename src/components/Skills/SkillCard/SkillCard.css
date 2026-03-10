@@ -22,9 +22,10 @@
 
 .skill-header {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
+  align-items: flex-start;
 }
 
 .skill-name {
@@ -33,12 +34,17 @@
   color: #667eea;
   font-weight: bold;
   line-height: 1.2;
+  flex: 0 1 auto;
+  align-self: center;
 }
 
 .skill-badges {
   display: flex;
   gap: 0.4rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .badge {
@@ -58,6 +64,33 @@
   color: #fbbf24;
   cursor: help;
   font-weight: bold;
+}
+
+.pin-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  transition: all 0.2s ease;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+.pin-btn:hover {
+  color: #a0b6ff;
+  transform: scale(1.1);
+}
+
+.pin-btn.pinned {
+  color: #fbbf24;
+}
+
+.pin-icon {
+  font-size: 1rem;
 }
 
 .badge-icon {

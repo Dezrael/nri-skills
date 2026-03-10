@@ -39,6 +39,25 @@ const SkillsList: React.FC<SkillsListProps> = ({
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
+  const [pinnedSkillIds, setPinnedSkillIds] = useState<Set<number>>(() => {
+    const stored = localStorage.getItem(`pinned-skills-${className}`);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  });
+
+  const handleTogglePin = (skillId: number | undefined) => {
+    if (skillId === undefined) return;
+    const newPinned = new Set(pinnedSkillIds);
+    if (newPinned.has(skillId)) {
+      newPinned.delete(skillId);
+    } else {
+      newPinned.add(skillId);
+    }
+    setPinnedSkillIds(newPinned);
+    localStorage.setItem(
+      `pinned-skills-${className}`,
+      JSON.stringify(Array.from(newPinned)),
+    );
+  };
 
   useEffect(() => {
     if (!categoryLabels.includes(activeCategoryTab)) {
@@ -46,16 +65,35 @@ const SkillsList: React.FC<SkillsListProps> = ({
     }
   }, [activeCategoryTab, categoryLabels, defaultCategory]);
 
+  useEffect(() => {
+    const stored = localStorage.getItem(`pinned-skills-${className}`);
+    setPinnedSkillIds(stored ? new Set(JSON.parse(stored)) : new Set());
+  }, [className]);
+
   const visibleSkills = shouldShowCategoryTabs
-    ? chosenSkills.filter((skill) => {
-        const normalizedCategory = skill.category?.trim();
-        const categoryLabel =
-          normalizedCategory && normalizedCategory.length > 0
-            ? normalizedCategory
-            : "Основные";
-        return categoryLabel === activeCategoryTab;
-      })
-    : chosenSkills;
+    ? chosenSkills
+        .filter((skill) => {
+          const normalizedCategory = skill.category?.trim();
+          const categoryLabel =
+            normalizedCategory && normalizedCategory.length > 0
+              ? normalizedCategory
+              : "Основные";
+          return categoryLabel === activeCategoryTab;
+        })
+        .sort((a, b) => {
+          const aPinned = a.id ? pinnedSkillIds.has(a.id) : false;
+          const bPinned = b.id ? pinnedSkillIds.has(b.id) : false;
+          if (aPinned && !bPinned) return -1;
+          if (!aPinned && bPinned) return 1;
+          return 0;
+        })
+    : chosenSkills.sort((a, b) => {
+        const aPinned = a.id ? pinnedSkillIds.has(a.id) : false;
+        const bPinned = b.id ? pinnedSkillIds.has(b.id) : false;
+        if (aPinned && !bPinned) return -1;
+        if (!aPinned && bPinned) return 1;
+        return 0;
+      });
 
   const handleSkipTurn = () => {
     skipTurn();
@@ -291,6 +329,8 @@ const SkillsList: React.FC<SkillsListProps> = ({
             className={className}
             onSelectSkill={onSelectSkill}
             onCooldownChange={() => setCooldownKey((prev) => prev + 1)}
+            isPinned={skill.id ? pinnedSkillIds.has(skill.id) : false}
+            onTogglePin={handleTogglePin}
           />
         ))}
       </div>

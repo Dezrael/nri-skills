@@ -13,6 +13,8 @@ interface SkillCardProps {
   className: string;
   onSelectSkill: (skill: PlayerSkill) => void;
   onCooldownChange?: () => void;
+  isPinned?: boolean;
+  onTogglePin?: (skillId: number | undefined) => void;
 }
 
 const SkillCard: React.FC<SkillCardProps> = ({
@@ -20,6 +22,8 @@ const SkillCard: React.FC<SkillCardProps> = ({
   className,
   onSelectSkill,
   onCooldownChange,
+  isPinned,
+  onTogglePin,
 }) => {
   const [cooldown, setCooldown] = useState(getCooldown(className, skill.name));
 
@@ -39,6 +43,11 @@ const SkillCard: React.FC<SkillCardProps> = ({
     playerUseSkillOutOfCombat(className, skill.name, skill.outCombatCooldown);
     setCooldown(getCooldown(className, skill.name));
     onCooldownChange?.();
+  };
+
+  const handleTogglePin = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onTogglePin?.(skill.id);
   };
 
   const isOnCooldown =
@@ -66,8 +75,23 @@ const SkillCard: React.FC<SkillCardProps> = ({
               </span>
             </span>
           )}
-          <span className="badge action-type">{skill.actionType}</span>
+          {skill.actionType && skill.actionType !== "-" && (
+            <span className="badge action-type">{skill.actionType}</span>
+          )}
         </div>
+        <button
+          className={`pin-btn ${isPinned ? "pinned" : ""}`}
+          onClick={handleTogglePin}
+          title={isPinned ? "Открепить заклинание" : "Закрепить заклинание"}
+          aria-label={isPinned ? "Открепить" : "Закрепить"}
+        >
+          <span
+            className="material-symbols-rounded pin-icon"
+            aria-hidden="true"
+          >
+            {isPinned ? "lock" : "lock_open"}
+          </span>
+        </button>
       </div>
 
       <p className="short-description">{skill.shortDescription}</p>
