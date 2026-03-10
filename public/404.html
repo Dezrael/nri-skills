@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      // Redirects unknown GitHub Pages paths to index while preserving route.
+      // segmentCount = 1 for project pages hosted at /<repo-name>.
+      var segmentCount = 1;
+      var locationData = window.location;
+      var basePath = locationData.pathname
+        .split("/")
+        .slice(0, 1 + segmentCount)
+        .join("/");
+      var routePath = locationData.pathname
+        .slice(1)
+        .split("/")
+        .slice(segmentCount)
+        .join("/");
+
+      var redirectUrl =
+        locationData.protocol +
+        "//" +
+        locationData.hostname +
+        (locationData.port ? ":" + locationData.port : "") +
+        basePath +
+        "/?/" +
+        routePath.replace(/&/g, "~and~") +
+        (locationData.search
+          ? "&" + locationData.search.slice(1).replace(/&/g, "~and~")
+          : "") +
+        locationData.hash;
+
+      locationData.replace(redirectUrl);
+    </script>
+  </head>
+  <body></body>
+</html>
