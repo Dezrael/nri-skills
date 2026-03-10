@@ -69,7 +69,7 @@
 .pin-btn {
   background: none;
   border: none;
-  padding: 0;
+  padding: 0.15rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -90,7 +90,7 @@
 }
 
 .pin-icon {
-  font-size: 1rem;
+  font-size: 1.25rem;
 }
 
 .badge-icon {
