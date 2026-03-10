@@ -67,18 +67,44 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
     loadSkills();
   }, []);
 
-  const reloadData = async () => {
+  useEffect(() => {
+    if (selectedClass && !skillsData[selectedClass]) {
+      setSelectedClass(null);
+      setActiveTab("skills");
+    }
+  }, [selectedClass, skillsData]);
+
+  const reloadData = async (options?: { showSuccessToast?: boolean }) => {
+    const { showSuccessToast = true } = options ?? {};
+
     try {
       setIsReloading(true);
       const data = await fetchAllSkillsData();
       setSkillsData(data);
       setError(null);
-      showToast("success", "Данные обновлены с сервера");
+
+      setSelectedClass((currentSelectedClass) =>
+        currentSelectedClass && data[currentSelectedClass]
+          ? currentSelectedClass
+          : null,
+      );
+
+      if (showSuccessToast) {
+        showToast("success", "Данные обновлены с сервера");
+      }
     } catch (err) {
+      if (isUnauthorizedError(err)) {
+        onAuthExpired();
+        return;
+      }
+
       setError(
         err instanceof Error ? err.message : "Неизвестная ошибка при загрузке",
       );
-      showToast("error", "Не удалось обновить данные");
+
+      if (showSuccessToast) {
+        showToast("error", "Не удалось обновить данные");
+      }
     } finally {
       setIsReloading(false);
     }
@@ -100,12 +126,12 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
     try {
       setIsSubmittingClass(true);
       await createClass(trimmed, authToken);
-      const newData = {
-        ...skillsData,
+      setSkillsData((currentData) => ({
+        ...currentData,
         [trimmed]: { skills: [], passives: [], mushrooms: [] },
-      };
-      setSkillsData(newData);
+      }));
       setSelectedClass(trimmed);
+      setActiveTab("skills");
       setNewClassName("");
       setIsCreatingClass(false);
       showToast("success", `Класс "${trimmed}" создан`);
@@ -140,6 +166,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
       delete newData[classToDelete];
       setSkillsData(newData);
       setSelectedClass(null);
+      setActiveTab("skills");
       showToast("success", `Класс "${classToDelete}" удалён`);
     } catch (err) {
       if (isUnauthorizedError(err)) {
@@ -250,7 +277,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
       };
 
       const result = await bulkImportData(payload, authToken);
-      await reloadData();
+      await reloadData({ showSuccessToast: false });
       setSelectedClass(null);
       setActiveTab("skills");
       showToast(
@@ -293,7 +320,9 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
     <div className="data-manager">
       <div className="data-controls">
         <button
-          onClick={reloadData}
+          onClick={() => {
+            void reloadData();
+          }}
           className="load-btn"
           disabled={isReloading || isImporting}
         >
@@ -354,12 +383,17 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
               onKeyDown={(e) => e.key === "Enter" && handleCreateClass()}
               placeholder="Название класса"
               autoFocus
-              disabled={isSubmittingClass}
+              disabled={isSubmittingClass || isReloading || isImporting}
               className="create-class-input"
             />
             <button
               onClick={handleCreateClass}
-              disabled={isSubmittingClass || !newClassName.trim()}
+              disabled={
+                isSubmittingClass ||
+                isReloading ||
+                isImporting ||
+                !newClassName.trim()
+              }
               className="confirm-create-btn"
             >
               {isSubmittingClass ? "Создание..." : "Создать"}
@@ -369,7 +403,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
                 setIsCreatingClass(false);
                 setNewClassName("");
               }}
-              disabled={isSubmittingClass}
+              disabled={isSubmittingClass || isReloading || isImporting}
               className="cancel-create-btn"
             >
               Отмена
@@ -378,6 +412,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
         ) : (
           <button
             onClick={() => setIsCreatingClass(true)}
+            disabled={isReloading || isImporting || isDeletingClass}
             className="create-class-btn"
           >
             <span
@@ -392,7 +427,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
         {selectedClass && (
           <button
             onClick={handleDeleteClass}
-            disabled={isDeletingClass}
+            disabled={isDeletingClass || isReloading || isImporting}
             className="delete-class-btn"
           >
             <span
