@@ -282,11 +282,19 @@
 }
 
 .cooldown-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.5rem;
   border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
-  text-align: center;
+  text-align: left;
+}
+
+.cooldown-badge-content {
+  flex: 1;
 }
 
 .cooldown-badge.duration {
@@ -296,6 +304,31 @@
 .inline-icon {
   font-size: 1rem;
   vertical-align: middle;
+}
+
+.cooldown-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.78;
+  transition: all 0.2s ease;
+}
+
+.cooldown-clear-btn .material-symbols-rounded {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.cooldown-clear-btn:hover {
+  opacity: 1;
+  transform: scale(1.08);
 }
 
 .cooldown-badge.combat {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
 import {
+  clearSkillCooldownField,
   consumeSkillCharge,
   getCooldown,
   getSkillCharges,
@@ -95,6 +96,21 @@ const SkillCard: React.FC<SkillCardProps> = ({
     e.stopPropagation();
     onTogglePin?.(skill.id);
   };
+
+  const handleClearCooldownField =
+    (
+      field:
+        | "inCombatTurns"
+        | "outCombatMinutes"
+        | "durationInCombatTurns"
+        | "durationOutCombatMinutes",
+    ) =>
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      clearSkillCooldownField(className, skill.name, field);
+      setCooldown(getCooldown(className, skill.name));
+      onCooldownChange?.();
+    };
 
   const isOnCooldown =
     !!cooldown && (cooldown.inCombatTurns > 0 || cooldown.outCombatMinutes > 0);
@@ -219,57 +235,109 @@ const SkillCard: React.FC<SkillCardProps> = ({
         <div className="active-cooldown">
           {combatDurationActive && (
             <div className="cooldown-badge duration combat">
-              <span
-                className="material-symbols-rounded inline-icon"
-                aria-hidden="true"
+              <span className="cooldown-badge-content">
+                <span
+                  className="material-symbols-rounded inline-icon"
+                  aria-hidden="true"
+                >
+                  timer
+                </span>{" "}
+                Длительность в бою: {cooldown!.durationInCombatTurns}{" "}
+                {cooldown!.durationInCombatTurns === 1
+                  ? "ход"
+                  : cooldown!.durationInCombatTurns < 5
+                    ? "хода"
+                    : "ходов"}
+              </span>
+              <button
+                type="button"
+                className="cooldown-clear-btn"
+                aria-label="Сбросить длительность в бою"
+                title="Сбросить"
+                onClick={handleClearCooldownField("durationInCombatTurns")}
               >
-                timer
-              </span>{" "}
-              Длительность в бою: {cooldown!.durationInCombatTurns}{" "}
-              {cooldown!.durationInCombatTurns === 1
-                ? "ход"
-                : cooldown!.durationInCombatTurns < 5
-                  ? "хода"
-                  : "ходов"}
+                <span className="material-symbols-rounded" aria-hidden="true">
+                  close
+                </span>
+              </button>
             </div>
           )}
           {outCombatDurationActive && (
             <div className="cooldown-badge duration out-combat">
-              <span
-                className="material-symbols-rounded inline-icon"
-                aria-hidden="true"
+              <span className="cooldown-badge-content">
+                <span
+                  className="material-symbols-rounded inline-icon"
+                  aria-hidden="true"
+                >
+                  timer
+                </span>{" "}
+                Длительность вне боя:{" "}
+                {minutesToTimeString(cooldown!.durationOutCombatMinutes)}
+              </span>
+              <button
+                type="button"
+                className="cooldown-clear-btn"
+                aria-label="Сбросить длительность вне боя"
+                title="Сбросить"
+                onClick={handleClearCooldownField("durationOutCombatMinutes")}
               >
-                timer
-              </span>{" "}
-              Длительность вне боя:{" "}
-              {minutesToTimeString(cooldown!.durationOutCombatMinutes)}
+                <span className="material-symbols-rounded" aria-hidden="true">
+                  close
+                </span>
+              </button>
             </div>
           )}
           {combatCooldownActive && (
             <div className="cooldown-badge combat">
-              <span
-                className="material-symbols-rounded inline-icon"
-                aria-hidden="true"
+              <span className="cooldown-badge-content">
+                <span
+                  className="material-symbols-rounded inline-icon"
+                  aria-hidden="true"
+                >
+                  swords
+                </span>{" "}
+                Перезарядка: {cooldown!.inCombatTurns}{" "}
+                {cooldown!.inCombatTurns === 1
+                  ? "ход"
+                  : cooldown!.inCombatTurns < 5
+                    ? "хода"
+                    : "ходов"}
+              </span>
+              <button
+                type="button"
+                className="cooldown-clear-btn"
+                aria-label="Сбросить перезарядку в бою"
+                title="Сбросить"
+                onClick={handleClearCooldownField("inCombatTurns")}
               >
-                swords
-              </span>{" "}
-              Перезарядка: {cooldown!.inCombatTurns}{" "}
-              {cooldown!.inCombatTurns === 1
-                ? "ход"
-                : cooldown!.inCombatTurns < 5
-                  ? "хода"
-                  : "ходов"}
+                <span className="material-symbols-rounded" aria-hidden="true">
+                  close
+                </span>
+              </button>
             </div>
           )}
           {outCombatCooldownActive && (
             <div className="cooldown-badge out-combat">
-              <span
-                className="material-symbols-rounded inline-icon"
-                aria-hidden="true"
+              <span className="cooldown-badge-content">
+                <span
+                  className="material-symbols-rounded inline-icon"
+                  aria-hidden="true"
+                >
+                  schedule
+                </span>{" "}
+                Перезарядка: {minutesToTimeString(cooldown!.outCombatMinutes)}
+              </span>
+              <button
+                type="button"
+                className="cooldown-clear-btn"
+                aria-label="Сбросить перезарядку вне боя"
+                title="Сбросить"
+                onClick={handleClearCooldownField("outCombatMinutes")}
               >
-                schedule
-              </span>{" "}
-              Перезарядка: {minutesToTimeString(cooldown!.outCombatMinutes)}
+                <span className="material-symbols-rounded" aria-hidden="true">
+                  close
+                </span>
+              </button>
             </div>
           )}
         </div>

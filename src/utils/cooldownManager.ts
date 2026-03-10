@@ -193,6 +193,36 @@ export const removeCooldown = (className: string, skillName: string) => {
   saveAllCooldowns(cooldowns);
 };
 
+export const clearSkillCooldownField = (
+  className: string,
+  skillName: string,
+  field:
+    | "inCombatTurns"
+    | "outCombatMinutes"
+    | "durationInCombatTurns"
+    | "durationOutCombatMinutes",
+) => {
+  const cooldowns = getAllCooldowns();
+  const key = getSkillKey(className, skillName);
+  const currentCooldown = cooldowns[key];
+
+  if (!currentCooldown) {
+    return;
+  }
+
+  cooldowns[key] = {
+    ...currentCooldown,
+    [field]: 0,
+  };
+
+  if (cleanupExpiredCooldowns(cooldowns)) {
+    saveAllCooldowns(cooldowns);
+    return;
+  }
+
+  saveAllCooldowns(cooldowns);
+};
+
 // Конвертировать строку времени в минуты
 export const timeStringToMinutes = (timeStr: string): number => {
   if (!timeStr || timeStr === "-" || timeStr === "∞") return 0;
