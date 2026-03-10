@@ -12,6 +12,8 @@ import MushroomsTable from "../MushroomsTable";
 import AdminToast, { AdminToastType } from "../AdminToast/AdminToast";
 import {
   bulkImportData,
+  createClass,
+  deleteClass,
   fetchAllSkillsData,
   isUnauthorizedError,
 } from "../../../api/nriApi";
@@ -30,6 +32,10 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
   const [activeTab, setActiveTab] = useState<string>("skills");
   const [isReloading, setIsReloading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isCreatingClass, setIsCreatingClass] = useState(false);
+  const [newClassName, setNewClassName] = useState("");
+  const [isSubmittingClass, setIsSubmittingClass] = useState(false);
+  const [isDeletingClass, setIsDeletingClass] = useState(false);
   const [toast, setToast] = useState<{
     type: AdminToastType;
     message: string;
@@ -80,6 +86,73 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
 
   const handleSelectClass = (className: string) => {
     setSelectedClass(className);
+  };
+
+  const handleCreateClass = async () => {
+    const trimmed = newClassName.trim();
+    if (!trimmed) return;
+
+    if (skillsData[trimmed] !== undefined) {
+      showToast("error", `Класс "${trimmed}" уже существует`);
+      return;
+    }
+
+    try {
+      setIsSubmittingClass(true);
+      await createClass(trimmed, authToken);
+      const newData = {
+        ...skillsData,
+        [trimmed]: { skills: [], passives: [], mushrooms: [] },
+      };
+      setSkillsData(newData);
+      setSelectedClass(trimmed);
+      setNewClassName("");
+      setIsCreatingClass(false);
+      showToast("success", `Класс "${trimmed}" создан`);
+    } catch (err) {
+      if (isUnauthorizedError(err)) {
+        onAuthExpired();
+        return;
+      }
+      showToast(
+        "error",
+        err instanceof Error ? err.message : "Ошибка при создании класса",
+      );
+    } finally {
+      setIsSubmittingClass(false);
+    }
+  };
+
+  const handleDeleteClass = async () => {
+    if (!selectedClass) return;
+    if (
+      !window.confirm(
+        `Удалить класс "${selectedClass}" и все его данные? Это действие необратимо.`,
+      )
+    )
+      return;
+
+    const classToDelete = selectedClass;
+    try {
+      setIsDeletingClass(true);
+      await deleteClass(classToDelete, authToken);
+      const newData = { ...skillsData };
+      delete newData[classToDelete];
+      setSkillsData(newData);
+      setSelectedClass(null);
+      showToast("success", `Класс "${classToDelete}" удалён`);
+    } catch (err) {
+      if (isUnauthorizedError(err)) {
+        onAuthExpired();
+        return;
+      }
+      showToast(
+        "error",
+        err instanceof Error ? err.message : "Ошибка при удалении класса",
+      );
+    } finally {
+      setIsDeletingClass(false);
+    }
   };
 
   const handleExportData = () => {
@@ -270,6 +343,68 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
           onClose={() => setToast(null)}
         />
       )}
+
+      <div className="class-management">
+        {isCreatingClass ? (
+          <div className="create-class-form">
+            <input
+              type="text"
+              value={newClassName}
+              onChange={(e) => setNewClassName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleCreateClass()}
+              placeholder="Название класса"
+              autoFocus
+              disabled={isSubmittingClass}
+              className="create-class-input"
+            />
+            <button
+              onClick={handleCreateClass}
+              disabled={isSubmittingClass || !newClassName.trim()}
+              className="confirm-create-btn"
+            >
+              {isSubmittingClass ? "Создание..." : "Создать"}
+            </button>
+            <button
+              onClick={() => {
+                setIsCreatingClass(false);
+                setNewClassName("");
+              }}
+              disabled={isSubmittingClass}
+              className="cancel-create-btn"
+            >
+              Отмена
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsCreatingClass(true)}
+            className="create-class-btn"
+          >
+            <span
+              className="material-symbols-rounded btn-icon"
+              aria-hidden="true"
+            >
+              add
+            </span>
+            Создать класс
+          </button>
+        )}
+        {selectedClass && (
+          <button
+            onClick={handleDeleteClass}
+            disabled={isDeletingClass}
+            className="delete-class-btn"
+          >
+            <span
+              className="material-symbols-rounded btn-icon"
+              aria-hidden="true"
+            >
+              delete
+            </span>
+            {isDeletingClass ? "Удаление..." : `Удалить ${selectedClass}`}
+          </button>
+        )}
+      </div>
 
       <ClassSelector
         classes={classes}

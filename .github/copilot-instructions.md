@@ -25,6 +25,7 @@ interface Skill {
   inCombatCooldown: string;
   outCombatCooldown: string;
   outCombatCharges: string;
+  category: string;
   shortDescription: string;
   description: string;
   concentration: boolean;
@@ -195,6 +196,52 @@ const { data } = await response.json(); // data: []
 }
 ```
 
+### POST /api/v1/classes
+
+Создать новый класс. Массивы `skills`, `passives`, `mushrooms` опциональны.
+Если какой-то массив не передан, сервер использует пустой массив.
+
+**Body:**
+
+```typescript
+{
+  className: string;
+  skills?: Array<Omit<Skill, "id" | "className" | "createdAt" | "updatedAt">>;
+  passives?: Array<Omit<Passive, "id" | "className" | "createdAt" | "updatedAt">>;
+  mushrooms?: Array<Omit<Mushroom, "id" | "className" | "createdAt" | "updatedAt">>;
+}
+```
+
+**Response:**
+
+```typescript
+{
+  data: {
+    className: string;
+    skills: number;
+    passives: number;
+    mushrooms: number;
+  }
+}
+```
+
+### DELETE /api/v1/classes/:className
+
+Удалить класс и все связанные записи в `skills`, `passives`, `mushrooms`.
+
+**Response:**
+
+```typescript
+{
+  data: {
+    className: string;
+    skills: number;
+    passives: number;
+    mushrooms: number;
+  }
+}
+```
+
 ### PUT /api/v1/skills/:id
 
 Изменить выбранный скилл.
@@ -215,6 +262,7 @@ Partial<
     | "inCombatCooldown"
     | "outCombatCooldown"
     | "outCombatCharges"
+    | "category"
     | "shortDescription"
     | "description"
     | "concentration"

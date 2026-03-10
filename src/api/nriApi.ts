@@ -255,3 +255,31 @@ export const deleteMushroom = (id: number, token: string) =>
     `/mushrooms/${id}`,
     withAuthHeader(token, { method: "DELETE" }),
   );
+
+type ClassResult = {
+  className: string;
+  skills: number;
+  passives: number;
+  mushrooms: number;
+};
+
+export const createClass = (className: string, token: string) =>
+  fetchJson<ClassResult>(
+    "/classes",
+    withAuthHeader(token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        className,
+        skills: [],
+        passives: [],
+        mushrooms: [],
+      }),
+    }),
+  );
+
+export const deleteClass = (className: string, token: string) =>
+  fetchJson<ClassResult>(
+    `/classes/${encodeURIComponent(className)}`,
+    withAuthHeader(token, { method: "DELETE" }),
+  );
