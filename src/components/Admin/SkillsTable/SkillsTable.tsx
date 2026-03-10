@@ -31,6 +31,7 @@ function SkillsTable({
   const handleAdd = () => {
     const newSkill: PlayerSkill = {
       name: "",
+      category: "",
       actionType: "",
       range: "",
       stat: "",
@@ -180,6 +181,14 @@ function SkillsTable({
                 type="text"
                 value={editingSkill.name}
                 onChange={(e) => updateEditingSkill("name", e.target.value)}
+              />
+            </div>
+            <div className="form-field">
+              <label>Категория:</label>
+              <input
+                type="text"
+                value={editingSkill.category || ""}
+                onChange={(e) => updateEditingSkill("category", e.target.value)}
               />
             </div>
             <div className="form-field">

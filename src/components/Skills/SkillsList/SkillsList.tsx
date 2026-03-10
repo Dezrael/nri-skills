@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
 import SkillCard from "../SkillCard/SkillCard";
 import { skipTurn, skipTime } from "../../../utils/cooldownManager";
+import Tabs from "../../Tabs/Tabs";
 import "./SkillsList.css";
 
 interface SkillsListProps {
@@ -16,11 +17,45 @@ const SkillsList: React.FC<SkillsListProps> = ({
   onSelectSkill,
 }) => {
   const chosenSkills = skills.filter((s) => s.isChosen);
+  const categoryLabels = Array.from(
+    new Set(
+      chosenSkills.map((skill) => {
+        const normalizedCategory = skill.category?.trim();
+        return normalizedCategory && normalizedCategory.length > 0
+          ? normalizedCategory
+          : "Основные";
+      }),
+    ),
+  ).sort((a, b) => {
+    if (a === "Основные") return -1;
+    if (b === "Основные") return 1;
+    return a.localeCompare(b);
+  });
+  const shouldShowCategoryTabs = categoryLabels.length > 1;
+  const defaultCategory = categoryLabels[0] || "Основные";
+  const [activeCategoryTab, setActiveCategoryTab] = useState(defaultCategory);
   const [cooldownKey, setCooldownKey] = useState(0);
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
+
+  useEffect(() => {
+    if (!categoryLabels.includes(activeCategoryTab)) {
+      setActiveCategoryTab(defaultCategory);
+    }
+  }, [activeCategoryTab, categoryLabels, defaultCategory]);
+
+  const visibleSkills = shouldShowCategoryTabs
+    ? chosenSkills.filter((skill) => {
+        const normalizedCategory = skill.category?.trim();
+        const categoryLabel =
+          normalizedCategory && normalizedCategory.length > 0
+            ? normalizedCategory
+            : "Основные";
+        return categoryLabel === activeCategoryTab;
+      })
+    : chosenSkills;
 
   const handleSkipTurn = () => {
     skipTurn();
@@ -61,31 +96,41 @@ const SkillsList: React.FC<SkillsListProps> = ({
     <div className="skills-list-container">
       <div className="skills-header">
         <h2>Выбранные заклинания</h2>
+        <div className="time-controls">
+          <button onClick={handleSkipTurn} className="time-btn skip-turn">
+            <span
+              className="material-symbols-rounded btn-icon"
+              aria-hidden="true"
+            >
+              swords
+            </span>
+            Пропустить ход
+          </button>
+          <button
+            onClick={() => setShowTimeModal(true)}
+            className="time-btn skip-time"
+          >
+            <span
+              className="material-symbols-rounded btn-icon"
+              aria-hidden="true"
+            >
+              schedule
+            </span>
+            Пропустить время
+          </button>
+        </div>
       </div>
 
-      <div className="time-controls">
-        <button onClick={handleSkipTurn} className="time-btn skip-turn">
-          <span
-            className="material-symbols-rounded btn-icon"
-            aria-hidden="true"
-          >
-            swords
-          </span>
-          Пропустить ход
-        </button>
-        <button
-          onClick={() => setShowTimeModal(true)}
-          className="time-btn skip-time"
-        >
-          <span
-            className="material-symbols-rounded btn-icon"
-            aria-hidden="true"
-          >
-            schedule
-          </span>
-          Пропустить время
-        </button>
-      </div>
+      {shouldShowCategoryTabs && (
+        <Tabs
+          tabs={categoryLabels.map((categoryLabel) => ({
+            id: categoryLabel,
+            label: categoryLabel,
+          }))}
+          activeTab={activeCategoryTab}
+          onTabChange={setActiveCategoryTab}
+        />
+      )}
 
       {showTimeModal && (
         <div
@@ -239,7 +284,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
       )}
 
       <div className="skills-list">
-        {chosenSkills.map((skill) => (
+        {visibleSkills.map((skill) => (
           <SkillCard
             key={`${skill.name}-${cooldownKey}`}
             skill={skill}

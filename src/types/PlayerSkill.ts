@@ -2,6 +2,7 @@ export type PlayerSkill = {
   id?: number;
   className?: string;
   name: string; // название
+  category?: string; // категория заклинания
   actionType: string; // тип действия (основное/дополнительное и т.д.)
   range: string; // дальность
   stat: string; // характеристика (сила/ловкость/интеллект и т.д.)
