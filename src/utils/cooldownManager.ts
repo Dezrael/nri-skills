@@ -5,12 +5,21 @@ export interface CooldownData {
   outCombatMinutes: number; // Оставшееся время вне боя в минутах
 }
 
-const STORAGE_KEY = "skillCooldowns";
+export interface SkillChargesData {
+  current: number;
+  max: number;
+}
 
-// Получить все перезарядки из localStorage
-export const getAllCooldowns = (): Record<string, CooldownData> => {
-  const stored = localStorage.getItem(STORAGE_KEY);
+const STORAGE_KEY = "skillCooldowns";
+const CHARGES_STORAGE_KEY = "skillCharges";
+
+const getSkillKey = (className: string, skillName: string) =>
+  `${className}_${skillName}`;
+
+const parseStoredRecord = <T>(storageKey: string): Record<string, T> => {
+  const stored = localStorage.getItem(storageKey);
   if (!stored) return {};
+
   try {
     return JSON.parse(stored);
   } catch {
@@ -18,9 +27,71 @@ export const getAllCooldowns = (): Record<string, CooldownData> => {
   }
 };
 
+const saveStoredRecord = <T>(storageKey: string, data: Record<string, T>) => {
+  localStorage.setItem(storageKey, JSON.stringify(data));
+};
+
+const parseMaxCharges = (charges: string): number | null => {
+  const parsed = Number.parseInt(charges, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+const getAllSkillCharges = (): Record<string, SkillChargesData> =>
+  parseStoredRecord<SkillChargesData>(CHARGES_STORAGE_KEY);
+
+const saveAllSkillCharges = (charges: Record<string, SkillChargesData>) => {
+  saveStoredRecord(CHARGES_STORAGE_KEY, charges);
+};
+
+const getNormalizedSkillCharges = (
+  skillKey: string,
+  maxCharges: string,
+): SkillChargesData | null => {
+  const parsedMaxCharges = parseMaxCharges(maxCharges);
+  if (parsedMaxCharges === null) {
+    return null;
+  }
+
+  const allCharges = getAllSkillCharges();
+  const storedCharges = allCharges[skillKey];
+
+  if (!storedCharges || storedCharges.max !== parsedMaxCharges) {
+    return {
+      current: parsedMaxCharges,
+      max: parsedMaxCharges,
+    };
+  }
+
+  return {
+    current: Math.max(0, Math.min(storedCharges.current, storedCharges.max)),
+    max: storedCharges.max,
+  };
+};
+
+const cleanupExpiredCooldowns = (cooldowns: Record<string, CooldownData>) => {
+  let removedAny = false;
+
+  Object.keys(cooldowns).forEach((key) => {
+    if (
+      cooldowns[key].inCombatTurns <= 0 &&
+      cooldowns[key].outCombatMinutes <= 0
+    ) {
+      delete cooldowns[key];
+      removedAny = true;
+    }
+  });
+
+  return removedAny;
+};
+
+// Получить все перезарядки из localStorage
+export const getAllCooldowns = (): Record<string, CooldownData> => {
+  return parseStoredRecord<CooldownData>(STORAGE_KEY);
+};
+
 // Сохранить все перезарядки в localStorage
 const saveAllCooldowns = (cooldowns: Record<string, CooldownData>) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cooldowns));
+  saveStoredRecord(STORAGE_KEY, cooldowns);
 };
 
 // Получить перезарядку конкретного заклинания
@@ -29,8 +100,39 @@ export const getCooldown = (
   skillName: string,
 ): CooldownData | null => {
   const cooldowns = getAllCooldowns();
-  const key = `${className}_${skillName}`;
+  const key = getSkillKey(className, skillName);
   return cooldowns[key] || null;
+};
+
+export const getSkillCharges = (
+  className: string,
+  skillName: string,
+  maxCharges: string,
+): SkillChargesData | null =>
+  getNormalizedSkillCharges(getSkillKey(className, skillName), maxCharges);
+
+export const consumeSkillCharge = (
+  className: string,
+  skillName: string,
+  maxCharges: string,
+): SkillChargesData | null => {
+  const skillKey = getSkillKey(className, skillName);
+  const currentCharges = getNormalizedSkillCharges(skillKey, maxCharges);
+
+  if (!currentCharges) {
+    return null;
+  }
+
+  const nextCharges: SkillChargesData = {
+    current: Math.max(0, currentCharges.current - 1),
+    max: currentCharges.max,
+  };
+
+  const allCharges = getAllSkillCharges();
+  allCharges[skillKey] = nextCharges;
+  saveAllSkillCharges(allCharges);
+
+  return nextCharges;
 };
 
 // Установить перезарядку заклинания
@@ -40,7 +142,7 @@ export const setCooldown = (
   data: CooldownData,
 ) => {
   const cooldowns = getAllCooldowns();
-  const key = `${className}_${skillName}`;
+  const key = getSkillKey(className, skillName);
   cooldowns[key] = data;
   saveAllCooldowns(cooldowns);
 };
@@ -48,7 +150,7 @@ export const setCooldown = (
 // Удалить перезарядку заклинания (когда она закончилась)
 export const removeCooldown = (className: string, skillName: string) => {
   const cooldowns = getAllCooldowns();
-  const key = `${className}_${skillName}`;
+  const key = getSkillKey(className, skillName);
   delete cooldowns[key];
   saveAllCooldowns(cooldowns);
 };
@@ -147,6 +249,10 @@ export const skipTurn = () => {
     }
   });
 
+  if (cleanupExpiredCooldowns(cooldowns)) {
+    changed = true;
+  }
+
   if (changed) {
     saveAllCooldowns(cooldowns);
   }
@@ -169,6 +275,10 @@ export const skipTime = (timeStr: string) => {
       changed = true;
     }
   });
+
+  if (cleanupExpiredCooldowns(cooldowns)) {
+    changed = true;
+  }
 
   if (changed) {
     saveAllCooldowns(cooldowns);

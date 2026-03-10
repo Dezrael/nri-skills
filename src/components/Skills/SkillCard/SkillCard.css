@@ -166,6 +166,19 @@
   font-size: 0.75rem;
 }
 
+.cooldown .value.charges-value {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  line-height: 1.15;
+}
+
+.cooldown .charge-reset-type {
+  color: #c7d2fe;
+  font-size: 0.62rem;
+  font-weight: 500;
+}
+
 .skill-card .full-description {
   color: #b0b0b0;
   font-size: 0.8rem;

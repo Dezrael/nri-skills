@@ -72,6 +72,7 @@
 }
 
 .form-field input:not([type="checkbox"]),
+.form-field select,
 .form-field textarea {
   padding: 0.5rem;
   border: 1px solid rgba(102, 126, 234, 0.3);
@@ -79,9 +80,62 @@
   background: rgba(255, 255, 255, 0.05);
   color: #e0e0e0;
   font-size: 0.9rem;
+  resize: none;
+}
+
+.form-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  padding-right: 2.2rem;
+  color-scheme: dark;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1.5 1.5 6 6l4.5-4.5' stroke='%23bdd0ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    linear-gradient(
+      to right,
+      rgba(160, 182, 255, 0.2),
+      rgba(160, 182, 255, 0.2)
+    );
+  background-position:
+    calc(100% - 0.6rem) 50%,
+    calc(100% - 1.8rem) 50%;
+  background-size:
+    0.8rem 0.55rem,
+    1px 1.5rem;
+  background-repeat: no-repeat;
+}
+
+.form-field select:hover {
+  border-color: rgba(160, 182, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.form-field select:disabled {
+  cursor: not-allowed;
+  color: rgba(224, 224, 224, 0.55);
+  border-color: rgba(102, 126, 234, 0.18);
+  background-color: rgba(255, 255, 255, 0.03);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1.5 1.5 6 6l4.5-4.5' stroke='%237c88ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    linear-gradient(
+      to right,
+      rgba(124, 136, 173, 0.18),
+      rgba(124, 136, 173, 0.18)
+    );
+}
+
+.form-field select::-ms-expand {
+  display: none;
+}
+
+.form-field select option {
+  background: #182246;
+  color: #e0e0e0;
 }
 
 .form-field input:not([type="checkbox"]):focus,
+.form-field select:focus,
 .form-field textarea:focus {
   outline: none;
   border-color: #667eea;

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
 import {
+  consumeSkillCharge,
   getCooldown,
+  getSkillCharges,
   playerUseSkillInCombat,
   playerUseSkillOutOfCombat,
   minutesToTimeString,
@@ -26,13 +28,32 @@ const SkillCard: React.FC<SkillCardProps> = ({
   onTogglePin,
 }) => {
   const [cooldown, setCooldown] = useState(getCooldown(className, skill.name));
+  const [charges, setCharges] = useState(
+    getSkillCharges(className, skill.name, skill.outCombatCharges),
+  );
 
   useEffect(() => {
     setCooldown(getCooldown(className, skill.name));
-  }, [className, skill.name]);
+    setCharges(getSkillCharges(className, skill.name, skill.outCombatCharges));
+  }, [className, skill.name, skill.outCombatCharges]);
 
   const handleUseInCombat = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    if (charges && charges.current <= 0) {
+      return;
+    }
+
+    const nextCharges = consumeSkillCharge(
+      className,
+      skill.name,
+      skill.outCombatCharges,
+    );
+
+    if (nextCharges) {
+      setCharges(nextCharges);
+    }
+
     playerUseSkillInCombat(className, skill.name, skill.inCombatCooldown);
     setCooldown(getCooldown(className, skill.name));
     onCooldownChange?.();
@@ -40,6 +61,21 @@ const SkillCard: React.FC<SkillCardProps> = ({
 
   const handleUseOutOfCombat = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    if (charges && charges.current <= 0) {
+      return;
+    }
+
+    const nextCharges = consumeSkillCharge(
+      className,
+      skill.name,
+      skill.outCombatCharges,
+    );
+
+    if (nextCharges) {
+      setCharges(nextCharges);
+    }
+
     playerUseSkillOutOfCombat(className, skill.name, skill.outCombatCooldown);
     setCooldown(getCooldown(className, skill.name));
     onCooldownChange?.();
@@ -58,6 +94,13 @@ const SkillCard: React.FC<SkillCardProps> = ({
   const hasNumericInCombatCooldown = Number.isFinite(inCombatCooldownValue);
   const canUseInCombat =
     hasNumericInCombatCooldown && inCombatCooldownValue !== 0;
+  const hasChargeLimit = (Number(skill.outCombatCharges) || 0) > 0;
+  const hasChargesAvailable = !charges || charges.current > 0;
+  const chargesDisplay = charges
+    ? `${charges.current}/${charges.max}`
+    : skill.outCombatCharges;
+  const cooldownTypeDisplay = skill.cooldownType?.trim().toLowerCase();
+
   return (
     <div
       className={`skill-card ${skill.concentration ? "concentration" : ""}`}
@@ -110,8 +153,12 @@ const SkillCard: React.FC<SkillCardProps> = ({
           <span className="value">{skill.stat}</span>
         </div>
         <div className="stat">
-          <span className="label">Длительность:</span>
-          <span className="value">{skill.duration}</span>
+          <span className="label">Длит. в бою:</span>
+          <span className="value">{skill.durationInCombat}</span>
+        </div>
+        <div className="stat">
+          <span className="label">Длит. вне боя:</span>
+          <span className="value">{skill.durationOutOfCombat}</span>
         </div>
         {skill.damage !== "0" && (
           <div className="stat">
@@ -123,16 +170,21 @@ const SkillCard: React.FC<SkillCardProps> = ({
 
       <div className="skill-cooldowns">
         <div className="cooldown">
-          <span className="label">В бою (ходов):</span>
+          <span className="label">КД в бою (х.):</span>
           <span className="value">{skill.inCombatCooldown}</span>
         </div>
         <div className="cooldown">
-          <span className="label">Вне боя:</span>
+          <span className="label">КД вне боя:</span>
           <span className="value">{skill.outCombatCooldown}</span>
         </div>
         <div className="cooldown">
           <span className="label">Использования:</span>
-          <span className="value">{skill.outCombatCharges}</span>
+          <span className={`value ${hasChargeLimit ? "charges-value" : ""}`}>
+            <span>{chargesDisplay}</span>
+            {hasChargeLimit && cooldownTypeDisplay && (
+              <span className="charge-reset-type">{cooldownTypeDisplay}</span>
+            )}
+          </span>
         </div>
       </div>
 
@@ -176,7 +228,7 @@ const SkillCard: React.FC<SkillCardProps> = ({
         <button
           className="use-skill-btn combat"
           onClick={handleUseInCombat}
-          disabled={!canUseInCombat || isOnCooldown}
+          disabled={!canUseInCombat || isOnCooldown || !hasChargesAvailable}
         >
           <span
             className="material-symbols-rounded btn-icon"
@@ -192,7 +244,8 @@ const SkillCard: React.FC<SkillCardProps> = ({
           disabled={
             skill.outCombatCooldown === "-" ||
             skill.outCombatCooldown === "∞" ||
-            isOnCooldown
+            isOnCooldown ||
+            !hasChargesAvailable
           }
         >
           <span

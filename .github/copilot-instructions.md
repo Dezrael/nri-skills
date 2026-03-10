@@ -20,11 +20,13 @@ interface Skill {
   actionType: string;
   range: string;
   stat: string;
-  duration: string;
+  durationInCombat: string;
+  durationOutOfCombat: string;
   damage: string;
   inCombatCooldown: string;
   outCombatCooldown: string;
   outCombatCharges: string;
+  cooldownType?: string;
   category: string;
   shortDescription: string;
   description: string;
@@ -257,11 +259,13 @@ Partial<
     | "actionType"
     | "range"
     | "stat"
-    | "duration"
+    | "durationInCombat"
+    | "durationOutOfCombat"
     | "damage"
     | "inCombatCooldown"
     | "outCombatCooldown"
     | "outCombatCharges"
+    | "cooldownType"
     | "category"
     | "shortDescription"
     | "description"

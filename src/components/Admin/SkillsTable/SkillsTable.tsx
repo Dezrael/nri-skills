@@ -127,6 +127,12 @@ function SkillsTable({
     hours: "",
     minutes: "",
   });
+  const [durationOutOfCombatParts, setDurationOutOfCombatParts] =
+    useState<OutCombatParts>({
+      days: "",
+      hours: "",
+      minutes: "",
+    });
 
   const handleAdd = () => {
     const newSkill: PlayerSkill = {
@@ -135,10 +141,12 @@ function SkillsTable({
       actionType: "",
       range: "",
       stat: "",
-      duration: "",
+      durationInCombat: "",
+      durationOutOfCombat: "",
       damage: "",
       inCombatCooldown: "",
       outCombatCooldown: "",
+      cooldownType: "",
       outCombatCharges: "",
       shortDescription: "",
       description: "",
@@ -147,12 +155,16 @@ function SkillsTable({
     };
     setEditingSkill(newSkill);
     setOutCombatParts({ days: "", hours: "", minutes: "" });
+    setDurationOutOfCombatParts({ days: "", hours: "", minutes: "" });
     setIsAdding(true);
   };
 
   const handleEdit = (skill: PlayerSkill) => {
     setEditingSkill({ ...skill });
     setOutCombatParts(parseOutCombatCooldown(skill.outCombatCooldown || ""));
+    setDurationOutOfCombatParts(
+      parseOutCombatCooldown(skill.durationOutOfCombat || ""),
+    );
     setIsAdding(false);
   };
 
@@ -185,9 +197,15 @@ function SkillsTable({
     if (!editingSkill) return;
 
     const outCombatCooldown = formatOutCombatCooldown(outCombatParts);
+    const durationOutOfCombat = formatOutCombatCooldown(
+      durationOutOfCombatParts,
+    );
+    const hasCharges = (Number(editingSkill.outCombatCharges) || 0) > 0;
     const skillToSave: PlayerSkill = {
       ...editingSkill,
       outCombatCooldown,
+      durationOutOfCombat,
+      cooldownType: hasCharges ? editingSkill.cooldownType || "" : "",
     };
 
     if (
@@ -198,6 +216,14 @@ function SkillsTable({
       onNotify(
         "error",
         "Заполните обязательные поля: Название, Краткое описание и Полное описание",
+      );
+      return;
+    }
+
+    if (hasCharges && !skillToSave.cooldownType?.trim()) {
+      onNotify(
+        "error",
+        "Если у заклинания есть заряды, нужно выбрать тип перезарядки",
       );
       return;
     }
@@ -256,11 +282,23 @@ function SkillsTable({
   const handleCancel = () => {
     setEditingSkill(null);
     setOutCombatParts({ days: "", hours: "", minutes: "" });
+    setDurationOutOfCombatParts({ days: "", hours: "", minutes: "" });
     setIsAdding(false);
   };
 
   const updateEditingSkill = (field: keyof PlayerSkill, value: any) => {
     if (!editingSkill) return;
+
+    if (field === "outCombatCharges") {
+      const numericValue = Number(value) || 0;
+      setEditingSkill({
+        ...editingSkill,
+        outCombatCharges: value,
+        cooldownType: numericValue > 0 ? editingSkill.cooldownType : "",
+      });
+      return;
+    }
+
     setEditingSkill({ ...editingSkill, [field]: value });
   };
 
@@ -339,14 +377,6 @@ function SkillsTable({
               />
             </div>
             <div className="form-field">
-              <label>Длительность:</label>
-              <input
-                type="text"
-                value={editingSkill.duration}
-                onChange={(e) => updateEditingSkill("duration", e.target.value)}
-              />
-            </div>
-            <div className="form-field">
               <label>Урон:</label>
               <input
                 type="text"
@@ -355,14 +385,89 @@ function SkillsTable({
               />
             </div>
             <div className="form-field">
+              <label>Длительность в бою:</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={editingSkill.durationInCombat}
+                onChange={(e) => {
+                  if (!e.target.value || /^\d+$/.test(e.target.value))
+                    updateEditingSkill("durationInCombat", e.target.value);
+                }}
+              />
+            </div>
+            <div className="form-field">
               <label>КД в бою:</label>
               <input
                 type="text"
+                inputMode="numeric"
+                placeholder="0"
                 value={editingSkill.inCombatCooldown}
-                onChange={(e) =>
-                  updateEditingSkill("inCombatCooldown", e.target.value)
-                }
+                onChange={(e) => {
+                  if (!e.target.value || /^\d+$/.test(e.target.value))
+                    updateEditingSkill("inCombatCooldown", e.target.value);
+                }}
               />
+            </div>
+            <div className="form-field full-width">
+              <label>Длительность вне боя:</label>
+              <div className="time-parts-grid">
+                <div className="time-part-field">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={durationOutOfCombatParts.days}
+                    onChange={(e) =>
+                      setDurationOutOfCombatParts((prev) => ({
+                        ...prev,
+                        days:
+                          !e.target.value || /^\d+$/.test(e.target.value)
+                            ? e.target.value
+                            : prev.days,
+                      }))
+                    }
+                    placeholder="0"
+                  />
+                  <span>дней</span>
+                </div>
+                <div className="time-part-field">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={durationOutOfCombatParts.hours}
+                    onChange={(e) =>
+                      setDurationOutOfCombatParts((prev) => ({
+                        ...prev,
+                        hours:
+                          !e.target.value || /^\d+$/.test(e.target.value)
+                            ? e.target.value
+                            : prev.hours,
+                      }))
+                    }
+                    placeholder="0"
+                  />
+                  <span>часов</span>
+                </div>
+                <div className="time-part-field">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={durationOutOfCombatParts.minutes}
+                    onChange={(e) =>
+                      setDurationOutOfCombatParts((prev) => ({
+                        ...prev,
+                        minutes:
+                          !e.target.value || /^\d+$/.test(e.target.value)
+                            ? e.target.value
+                            : prev.minutes,
+                      }))
+                    }
+                    placeholder="0"
+                  />
+                  <span>минут</span>
+                </div>
+              </div>
             </div>
             <div className="form-field full-width">
               <label>КД вне боя:</label>
@@ -406,14 +511,38 @@ function SkillsTable({
               </div>
             </div>
             <div className="form-field">
-              <label>Заряды вне боя:</label>
+              <label>Заряды:</label>
               <input
                 type="text"
+                inputMode="numeric"
+                placeholder="0"
                 value={editingSkill.outCombatCharges}
-                onChange={(e) =>
-                  updateEditingSkill("outCombatCharges", e.target.value)
-                }
+                onChange={(e) => {
+                  if (!e.target.value || /^\d+$/.test(e.target.value))
+                    updateEditingSkill("outCombatCharges", e.target.value);
+                }}
               />
+            </div>
+            <div className="form-field">
+              <label>
+                Тип перезарядки
+                {(Number(editingSkill.outCombatCharges) || 0) > 0 ? "*" : ""}:
+              </label>
+              <select
+                value={
+                  (Number(editingSkill.outCombatCharges) || 0) > 0
+                    ? editingSkill.cooldownType || ""
+                    : ""
+                }
+                disabled={(Number(editingSkill.outCombatCharges) || 0) === 0}
+                onChange={(e) =>
+                  updateEditingSkill("cooldownType", e.target.value)
+                }
+              >
+                <option value="">Не выбрано</option>
+                <option value="До короткого отдыха">До короткого отдыха</option>
+                <option value="До долгого отдыха">До долгого отдыха</option>
+              </select>
             </div>
             <div className="form-field full-width">
               <label>Краткое описание* :</label>
@@ -493,6 +622,7 @@ function SkillsTable({
               <th>Характеристика</th>
               <th>Урон</th>
               <th>КД в бою</th>
+              <th>Тип перезарядки</th>
               <th>Действия</th>
             </tr>
           </thead>
@@ -505,6 +635,7 @@ function SkillsTable({
                 <td>{skill.stat}</td>
                 <td>{skill.damage}</td>
                 <td>{skill.inCombatCooldown}</td>
+                <td>{skill.cooldownType || "-"}</td>
                 <td>
                   <button
                     onClick={() => handleEdit(skill)}
