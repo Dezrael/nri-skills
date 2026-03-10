@@ -14,9 +14,13 @@ import Tabs from "../components/Tabs/Tabs";
 import { fetchAllSkillsData } from "../api/nriApi";
 import "../App.css";
 
+const SELECTED_CLASS_STORAGE_KEY = "selected-class";
+
 function Main() {
   const [skillsData, setSkillsData] = useState<SkillsDatabase>({});
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [selectedClass, setSelectedClass] = useState<string | null>(() =>
+    localStorage.getItem(SELECTED_CLASS_STORAGE_KEY),
+  );
   const [skills, setSkills] = useState<PlayerSkill[]>([]);
   const [passives, setPassives] = useState<PassiveAbility[]>([]);
   const [mushrooms, setMushrooms] = useState<Mushroom[]>([]);
@@ -45,27 +49,45 @@ function Main() {
     loadSkills();
   }, []);
 
-  // Загрузка заклинаний при выборе класса
-  const handleSelectClass = (className: string) => {
-    setSelectedClass(className);
-    const classData = skillsData[className];
-    if (classData) {
-      setSkills(classData.skills || []);
-      setPassives(classData.passives || []);
-      setMushrooms(classData.mushrooms || []);
+  useEffect(() => {
+    if (!selectedClass) {
+      setSkills([]);
+      setPassives([]);
+      setMushrooms([]);
+      return;
+    }
 
-      const hasMushrooms = (classData.mushrooms?.length || 0) > 0;
-      if (!hasMushrooms && activeTab === "mushrooms") {
-        setActiveTab("skills");
-      }
-    } else {
+    if (loading) {
+      return;
+    }
+
+    const classData = skillsData[selectedClass];
+
+    if (!classData) {
+      setSelectedClass(null);
+      localStorage.removeItem(SELECTED_CLASS_STORAGE_KEY);
       setSkills([]);
       setPassives([]);
       setMushrooms([]);
       if (activeTab === "mushrooms") {
         setActiveTab("skills");
       }
+      return;
     }
+
+    setSkills(classData.skills || []);
+    setPassives(classData.passives || []);
+    setMushrooms(classData.mushrooms || []);
+
+    const hasMushrooms = (classData.mushrooms?.length || 0) > 0;
+    if (!hasMushrooms && activeTab === "mushrooms") {
+      setActiveTab("skills");
+    }
+  }, [activeTab, loading, selectedClass, skillsData]);
+
+  const handleSelectClass = (className: string) => {
+    setSelectedClass(className);
+    localStorage.setItem(SELECTED_CLASS_STORAGE_KEY, className);
   };
 
   const classes = Object.keys(skillsData);
