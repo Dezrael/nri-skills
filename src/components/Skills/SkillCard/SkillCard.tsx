@@ -58,7 +58,12 @@ const SkillCard: React.FC<SkillCardProps> = ({
               className="badge concentration-badge"
               title="Требует концентрации"
             >
-              ⓒ
+              <span
+                className="material-symbols-rounded badge-icon"
+                aria-hidden="true"
+              >
+                blur_on
+              </span>
             </span>
           )}
           <span className="badge action-type">{skill.actionType}</span>
@@ -111,7 +116,13 @@ const SkillCard: React.FC<SkillCardProps> = ({
         <div className="active-cooldown">
           {combatCooldownActive && (
             <div className="cooldown-badge combat">
-              ⚔️ Перезарядка: {cooldown!.inCombatTurns}{" "}
+              <span
+                className="material-symbols-rounded inline-icon"
+                aria-hidden="true"
+              >
+                swords
+              </span>{" "}
+              Перезарядка: {cooldown!.inCombatTurns}{" "}
               {cooldown!.inCombatTurns === 1
                 ? "ход"
                 : cooldown!.inCombatTurns < 5
@@ -121,7 +132,13 @@ const SkillCard: React.FC<SkillCardProps> = ({
           )}
           {outCombatCooldownActive && (
             <div className="cooldown-badge out-combat">
-              ⏰ Перезарядка: {minutesToTimeString(cooldown!.outCombatMinutes)}
+              <span
+                className="material-symbols-rounded inline-icon"
+                aria-hidden="true"
+              >
+                schedule
+              </span>{" "}
+              Перезарядка: {minutesToTimeString(cooldown!.outCombatMinutes)}
             </div>
           )}
         </div>
@@ -133,7 +150,13 @@ const SkillCard: React.FC<SkillCardProps> = ({
           onClick={handleUseInCombat}
           disabled={skill.inCombatCooldown === "0" || isOnCooldown}
         >
-          ⚔️ Использовать в бою
+          <span
+            className="material-symbols-rounded btn-icon"
+            aria-hidden="true"
+          >
+            swords
+          </span>
+          Использовать в бою
         </button>
         <button
           className="use-skill-btn out-combat"
@@ -144,7 +167,13 @@ const SkillCard: React.FC<SkillCardProps> = ({
             isOnCooldown
           }
         >
-          🏕️ Использовать вне боя
+          <span
+            className="material-symbols-rounded btn-icon"
+            aria-hidden="true"
+          >
+            camping
+          </span>
+          Использовать вне боя
         </button>
       </div>
     </div>

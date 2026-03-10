@@ -52,8 +52,16 @@ function Admin() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>⚙️ Admin Panel</h1>
-        <p>Управление данными игры DND</p>
+        <h1>
+          <span
+            className="material-symbols-rounded title-icon"
+            aria-hidden="true"
+          >
+            admin_panel_settings
+          </span>
+          Панель администратора
+        </h1>
+        <p>Крутим скилы как хотим</p>
       </header>
 
       <main className="App-main">

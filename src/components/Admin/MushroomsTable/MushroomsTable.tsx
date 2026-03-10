@@ -11,6 +11,7 @@ import "./MushroomsTable.css";
 interface MushroomsTableProps {
   authToken: string;
   onAuthExpired: () => void;
+  onNotify: (type: "success" | "error" | "info", message: string) => void;
   className: string;
   mushrooms: Mushroom[];
   onUpdate: (mushrooms: Mushroom[]) => void;
@@ -19,6 +20,7 @@ interface MushroomsTableProps {
 function MushroomsTable({
   authToken,
   onAuthExpired,
+  onNotify,
   className,
   mushrooms,
   onUpdate,
@@ -52,12 +54,14 @@ function MushroomsTable({
         }
         const updatedMushrooms = mushrooms.filter((_, i) => i !== index);
         onUpdate(updatedMushrooms);
+        onNotify("success", "Гриб удален");
       } catch (err) {
         if (isUnauthorizedError(err)) {
           onAuthExpired();
           return;
         }
-        alert(
+        onNotify(
+          "error",
           err instanceof Error
             ? `Ошибка удаления: ${err.message}`
             : "Ошибка удаления",
@@ -79,6 +83,7 @@ function MushroomsTable({
           authToken,
         );
         onUpdate([...mushrooms, created]);
+        onNotify("success", "Гриб создан");
       } else {
         if (!editingMushroom.id) {
           throw new Error("У гриба отсутствует ID");
@@ -96,6 +101,7 @@ function MushroomsTable({
           const updatedMushrooms = [...mushrooms];
           updatedMushrooms[index] = updatedFromApi;
           onUpdate(updatedMushrooms);
+          onNotify("success", "Гриб обновлен");
         }
       }
 
@@ -106,7 +112,8 @@ function MushroomsTable({
         onAuthExpired();
         return;
       }
-      alert(
+      onNotify(
+        "error",
         err instanceof Error
           ? `Ошибка сохранения: ${err.message}`
           : "Ошибка сохранения",
@@ -129,7 +136,13 @@ function MushroomsTable({
       <div className="table-header">
         <h3>Грибы класса: {className}</h3>
         <button onClick={handleAdd} className="add-btn">
-          ➕ Добавить гриб
+          <span
+            className="material-symbols-rounded table-btn-icon"
+            aria-hidden="true"
+          >
+            add
+          </span>
+          Добавить гриб
         </button>
       </div>
 
@@ -188,10 +201,22 @@ function MushroomsTable({
           </div>
           <div className="form-actions">
             <button onClick={handleSave} className="save-btn">
-              💾 Сохранить
+              <span
+                className="material-symbols-rounded table-btn-icon"
+                aria-hidden="true"
+              >
+                save
+              </span>
+              Сохранить
             </button>
             <button onClick={handleCancel} className="cancel-btn">
-              ❌ Отмена
+              <span
+                className="material-symbols-rounded table-btn-icon"
+                aria-hidden="true"
+              >
+                close
+              </span>
+              Отмена
             </button>
           </div>
         </div>
@@ -226,13 +251,23 @@ function MushroomsTable({
                     onClick={() => handleEdit(mushroom)}
                     className="edit-btn"
                   >
-                    ✏️
+                    <span
+                      className="material-symbols-rounded action-icon"
+                      aria-hidden="true"
+                    >
+                      edit
+                    </span>
                   </button>
                   <button
                     onClick={() => handleDelete(index)}
                     className="delete-btn"
                   >
-                    🗑️
+                    <span
+                      className="material-symbols-rounded action-icon"
+                      aria-hidden="true"
+                    >
+                      delete
+                    </span>
                   </button>
                 </td>
               </tr>

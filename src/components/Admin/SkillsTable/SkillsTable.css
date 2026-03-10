@@ -17,6 +17,9 @@
 }
 
 .add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   background: rgba(34, 139, 34, 0.2);
   border: 2px solid #228b22;
   color: #32cd32;
@@ -68,7 +71,7 @@
   font-size: 0.9rem;
 }
 
-.form-field input,
+.form-field input:not([type="checkbox"]),
 .form-field textarea {
   padding: 0.5rem;
   border: 1px solid rgba(102, 126, 234, 0.3);
@@ -78,11 +81,81 @@
   font-size: 0.9rem;
 }
 
-.form-field input:focus,
+.form-field input:not([type="checkbox"]):focus,
 .form-field textarea:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.edit-form .form-grid .form-field.checkbox-group {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  white-space: nowrap;
+  padding: 0.1rem 0;
+  cursor: pointer;
+  color: #c5d4ff;
+  transition: color 0.2s ease;
+}
+
+.checkbox-label:hover {
+  color: #d8e2ff;
+}
+
+.checkbox-input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  display: inline-grid;
+  place-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  border: 2px solid #8ea2ff;
+  border-radius: 4px;
+  background: rgba(9, 14, 34, 0.75);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.checkbox-input::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.28rem;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg) scale(0);
+  transform-origin: center;
+  transition: transform 0.15s ease;
+}
+
+.checkbox-input:checked {
+  border-color: #6e83ee;
+  background: linear-gradient(135deg, #7f97ff 0%, #5a6fdc 100%);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.checkbox-input:checked::before {
+  transform: rotate(-45deg) scale(1);
+}
+
+.checkbox-input:focus-visible {
+  outline: 2px solid rgba(102, 126, 234, 0.7);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 .form-actions {
@@ -94,6 +167,9 @@
 
 .save-btn,
 .cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 6px;
@@ -106,6 +182,8 @@
 .edit-form .form-actions .cancel-btn {
   flex: 0 0 auto;
   width: auto;
+  height: 36px;
+  padding: 0 0.75rem;
 }
 
 .save-btn {
@@ -163,21 +241,52 @@
 
 .edit-btn,
 .delete-btn {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.35rem;
   margin: 0 0.25rem;
-  border-radius: 4px;
-  transition: all 0.3s ease;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-btn-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.action-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.edit-btn {
+  color: #93c5fd;
+}
+
+.delete-btn {
+  color: #fda4af;
 }
 
 .edit-btn:hover {
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #dbeafe;
 }
 
 .delete-btn:hover {
   background: rgba(220, 53, 69, 0.2);
+  border-color: rgba(220, 53, 69, 0.45);
+  color: #ffe4e7;
+}
+
+.edit-btn:focus-visible,
+.delete-btn:focus-visible {
+  outline: 2px solid rgba(102, 126, 234, 0.6);
+  outline-offset: 1px;
 }
 
 @media (max-width: 768px) {
@@ -199,6 +308,10 @@
   .form-actions .save-btn,
   .form-actions .cancel-btn {
     width: auto;
+  }
+
+  .checkbox-group {
+    gap: 0.65rem;
   }
 
   .skills-table th,

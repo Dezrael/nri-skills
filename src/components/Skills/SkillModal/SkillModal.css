@@ -64,6 +64,11 @@
   transition: all 0.2s ease;
 }
 
+.modal-close .material-symbols-rounded {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
 .modal-close:hover {
   background: rgba(102, 126, 234, 0.3);
   border-color: rgba(102, 126, 234, 0.5);
@@ -102,6 +107,11 @@
   border-color: rgba(245, 158, 11, 0.3);
   color: #fbbf24;
   font-weight: bold;
+}
+
+.badge-icon {
+  font-size: 0.95rem;
+  vertical-align: middle;
 }
 
 .modal-info {

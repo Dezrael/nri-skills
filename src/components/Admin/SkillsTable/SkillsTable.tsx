@@ -11,6 +11,7 @@ import "./SkillsTable.css";
 interface SkillsTableProps {
   authToken: string;
   onAuthExpired: () => void;
+  onNotify: (type: "success" | "error" | "info", message: string) => void;
   className: string;
   skills: PlayerSkill[];
   onUpdate: (skills: PlayerSkill[]) => void;
@@ -19,6 +20,7 @@ interface SkillsTableProps {
 function SkillsTable({
   authToken,
   onAuthExpired,
+  onNotify,
   className,
   skills,
   onUpdate,
@@ -60,12 +62,14 @@ function SkillsTable({
         }
         const updatedSkills = skills.filter((_, i) => i !== index);
         onUpdate(updatedSkills);
+        onNotify("success", "Заклинание удалено");
       } catch (err) {
         if (isUnauthorizedError(err)) {
           onAuthExpired();
           return;
         }
-        alert(
+        onNotify(
+          "error",
           err instanceof Error
             ? `Ошибка удаления: ${err.message}`
             : "Ошибка удаления",
@@ -87,6 +91,7 @@ function SkillsTable({
           authToken,
         );
         onUpdate([...skills, created]);
+        onNotify("success", "Заклинание создано");
       } else {
         if (!editingSkill.id) {
           throw new Error("У скилла отсутствует ID");
@@ -106,6 +111,7 @@ function SkillsTable({
           const updatedSkills = [...skills];
           updatedSkills[index] = updatedFromApi;
           onUpdate(updatedSkills);
+          onNotify("success", "Заклинание обновлено");
         }
       }
 
@@ -116,7 +122,8 @@ function SkillsTable({
         onAuthExpired();
         return;
       }
-      alert(
+      onNotify(
+        "error",
         err instanceof Error
           ? `Ошибка сохранения: ${err.message}`
           : "Ошибка сохранения",
@@ -139,7 +146,13 @@ function SkillsTable({
       <div className="table-header">
         <h3>Заклинания класса: {className}</h3>
         <button onClick={handleAdd} className="add-btn">
-          ➕ Добавить заклинание
+          <span
+            className="material-symbols-rounded table-btn-icon"
+            aria-hidden="true"
+          >
+            add
+          </span>
+          Добавить заклинание
         </button>
       </div>
 
@@ -249,10 +262,11 @@ function SkillsTable({
                 rows={3}
               />
             </div>
-            <div className="form-field">
-              <label>
+            <div className="form-field full-width checkbox-group">
+              <label className="checkbox-label">
                 <input
                   type="checkbox"
+                  className="checkbox-input"
                   checked={editingSkill.concentration}
                   onChange={(e) =>
                     updateEditingSkill("concentration", e.target.checked)
@@ -260,11 +274,10 @@ function SkillsTable({
                 />
                 Требует концентрации
               </label>
-            </div>
-            <div className="form-field">
-              <label>
+              <label className="checkbox-label">
                 <input
                   type="checkbox"
+                  className="checkbox-input"
                   checked={editingSkill.isChosen}
                   onChange={(e) =>
                     updateEditingSkill("isChosen", e.target.checked)
@@ -276,10 +289,22 @@ function SkillsTable({
           </div>
           <div className="form-actions">
             <button onClick={handleSave} className="save-btn">
-              💾 Сохранить
+              <span
+                className="material-symbols-rounded table-btn-icon"
+                aria-hidden="true"
+              >
+                save
+              </span>
+              Сохранить
             </button>
             <button onClick={handleCancel} className="cancel-btn">
-              ❌ Отмена
+              <span
+                className="material-symbols-rounded table-btn-icon"
+                aria-hidden="true"
+              >
+                close
+              </span>
+              Отмена
             </button>
           </div>
         </div>
@@ -312,13 +337,23 @@ function SkillsTable({
                     onClick={() => handleEdit(skill)}
                     className="edit-btn"
                   >
-                    ✏️
+                    <span
+                      className="material-symbols-rounded action-icon"
+                      aria-hidden="true"
+                    >
+                      edit_square
+                    </span>
                   </button>
                   <button
                     onClick={() => handleDelete(index)}
                     className="delete-btn"
                   >
-                    🗑️
+                    <span
+                      className="material-symbols-rounded action-icon"
+                      aria-hidden="true"
+                    >
+                      delete
+                    </span>
                   </button>
                 </td>
               </tr>

@@ -9,6 +9,7 @@ import ClassSelector from "../../ClassSelector/ClassSelector";
 import SkillsTable from "../SkillsTable";
 import PassivesTable from "../PassivesTable";
 import MushroomsTable from "../MushroomsTable";
+import AdminToast, { AdminToastType } from "../AdminToast/AdminToast";
 import {
   bulkImportData,
   fetchAllSkillsData,
@@ -27,7 +28,18 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("skills");
+  const [isReloading, setIsReloading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [toast, setToast] = useState<{
+    type: AdminToastType;
+    message: string;
+  } | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+
+  const showToast = (type: AdminToastType, message: string) => {
+    setToast({ type, message });
+    window.setTimeout(() => setToast(null), 3500);
+  };
 
   // Загрузка данных из JSON при загрузке
   useEffect(() => {
@@ -51,16 +63,18 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
 
   const reloadData = async () => {
     try {
-      setLoading(true);
+      setIsReloading(true);
       const data = await fetchAllSkillsData();
       setSkillsData(data);
       setError(null);
+      showToast("success", "Данные обновлены с сервера");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Неизвестная ошибка при загрузке",
       );
+      showToast("error", "Не удалось обновить данные");
     } finally {
-      setLoading(false);
+      setIsReloading(false);
     }
   };
 
@@ -136,6 +150,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
     if (!file) return;
 
     try {
+      setIsImporting(true);
       const text = await file.text();
       const parsed = JSON.parse(text) as unknown;
       const normalized = normalizeImportedData(parsed);
@@ -165,8 +180,8 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
       await reloadData();
       setSelectedClass(null);
       setActiveTab("skills");
-
-      alert(
+      showToast(
+        "success",
         `Импорт завершен: классов ${result.classes}, скиллов ${result.skills}, пассивок ${result.passives}, грибов ${result.mushrooms}.`,
       );
     } catch (err) {
@@ -174,11 +189,14 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
         onAuthExpired();
         return;
       }
-      alert(
+      showToast(
+        "error",
         err instanceof Error
           ? `Ошибка импорта: ${err.message}`
           : "Ошибка импорта JSON",
       );
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -201,14 +219,40 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
   return (
     <div className="data-manager">
       <div className="data-controls">
-        <button onClick={reloadData} className="load-btn">
-          🔄 Обновить данные с сервера
+        <button
+          onClick={reloadData}
+          className="load-btn"
+          disabled={isReloading || isImporting}
+        >
+          <span
+            className="material-symbols-rounded btn-icon"
+            aria-hidden="true"
+          >
+            sync
+          </span>
+          {isReloading ? "Обновление..." : "Обновить данные с сервера"}
         </button>
         <button onClick={handleExportData} className="export-btn">
-          ⬇️ Экспорт JSON
+          <span
+            className="material-symbols-rounded btn-icon"
+            aria-hidden="true"
+          >
+            download
+          </span>
+          Экспорт JSON
         </button>
-        <button onClick={handleImportClick} className="import-btn">
-          ⬆️ Импорт JSON
+        <button
+          onClick={handleImportClick}
+          className="import-btn"
+          disabled={isImporting || isReloading}
+        >
+          <span
+            className="material-symbols-rounded btn-icon"
+            aria-hidden="true"
+          >
+            upload_file
+          </span>
+          {isImporting ? "Импорт..." : "Импорт JSON"}
         </button>
         <input
           ref={importInputRef}
@@ -218,6 +262,14 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
           className="import-input-hidden"
         />
       </div>
+
+      {toast && (
+        <AdminToast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <ClassSelector
         classes={classes}
@@ -243,6 +295,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
             <SkillsTable
               authToken={authToken}
               onAuthExpired={onAuthExpired}
+              onNotify={showToast}
               className={selectedClass}
               skills={skillsData[selectedClass]?.skills || []}
               onUpdate={(updatedSkills: PlayerSkill[]) => {
@@ -262,6 +315,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
             <PassivesTable
               authToken={authToken}
               onAuthExpired={onAuthExpired}
+              onNotify={showToast}
               className={selectedClass}
               passives={skillsData[selectedClass]?.passives || []}
               onUpdate={(updatedPassives: PassiveAbility[]) => {
@@ -281,6 +335,7 @@ function DataManager({ authToken, onAuthExpired }: DataManagerProps) {
             <MushroomsTable
               authToken={authToken}
               onAuthExpired={onAuthExpired}
+              onNotify={showToast}
               className={selectedClass}
               mushrooms={skillsData[selectedClass]?.mushrooms || []}
               onUpdate={(updatedMushrooms: Mushroom[]) => {

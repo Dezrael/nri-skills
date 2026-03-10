@@ -11,6 +11,7 @@ import "./PassivesTable.css";
 interface PassivesTableProps {
   authToken: string;
   onAuthExpired: () => void;
+  onNotify: (type: "success" | "error" | "info", message: string) => void;
   className: string;
   passives: PassiveAbility[];
   onUpdate: (passives: PassiveAbility[]) => void;
@@ -19,6 +20,7 @@ interface PassivesTableProps {
 function PassivesTable({
   authToken,
   onAuthExpired,
+  onNotify,
   className,
   passives,
   onUpdate,
@@ -55,12 +57,14 @@ function PassivesTable({
         }
         const updatedPassives = passives.filter((_, i) => i !== index);
         onUpdate(updatedPassives);
+        onNotify("success", "Пассивка удалена");
       } catch (err) {
         if (isUnauthorizedError(err)) {
           onAuthExpired();
           return;
         }
-        alert(
+        onNotify(
+          "error",
           err instanceof Error
             ? `Ошибка удаления: ${err.message}`
             : "Ошибка удаления",
@@ -82,6 +86,7 @@ function PassivesTable({
           authToken,
         );
         onUpdate([...passives, created]);
+        onNotify("success", "Пассивка создана");
       } else {
         if (!editingPassive.id) {
           throw new Error("У пассивки отсутствует ID");
@@ -99,6 +104,7 @@ function PassivesTable({
           const updatedPassives = [...passives];
           updatedPassives[index] = updatedFromApi;
           onUpdate(updatedPassives);
+          onNotify("success", "Пассивка обновлена");
         }
       }
 
@@ -109,7 +115,8 @@ function PassivesTable({
         onAuthExpired();
         return;
       }
-      alert(
+      onNotify(
+        "error",
         err instanceof Error
           ? `Ошибка сохранения: ${err.message}`
           : "Ошибка сохранения",
@@ -132,7 +139,13 @@ function PassivesTable({
       <div className="table-header">
         <h3>Пассивные способности класса: {className}</h3>
         <button onClick={handleAdd} className="add-btn">
-          ➕ Добавить пассивку
+          <span
+            className="material-symbols-rounded table-btn-icon"
+            aria-hidden="true"
+          >
+            add
+          </span>
+          Добавить пассивку
         </button>
       </div>
 
@@ -163,10 +176,22 @@ function PassivesTable({
           </div>
           <div className="form-actions">
             <button onClick={handleSave} className="save-btn">
-              💾 Сохранить
+              <span
+                className="material-symbols-rounded table-btn-icon"
+                aria-hidden="true"
+              >
+                save
+              </span>
+              Сохранить
             </button>
             <button onClick={handleCancel} className="cancel-btn">
-              ❌ Отмена
+              <span
+                className="material-symbols-rounded table-btn-icon"
+                aria-hidden="true"
+              >
+                close
+              </span>
+              Отмена
             </button>
           </div>
         </div>
@@ -195,13 +220,23 @@ function PassivesTable({
                     onClick={() => handleEdit(passive)}
                     className="edit-btn"
                   >
-                    ✏️
+                    <span
+                      className="material-symbols-rounded action-icon"
+                      aria-hidden="true"
+                    >
+                      edit
+                    </span>
                   </button>
                   <button
                     onClick={() => handleDelete(index)}
                     className="delete-btn"
                   >
-                    🗑️
+                    <span
+                      className="material-symbols-rounded action-icon"
+                      aria-hidden="true"
+                    >
+                      delete
+                    </span>
                   </button>
                 </td>
               </tr>

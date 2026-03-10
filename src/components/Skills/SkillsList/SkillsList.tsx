@@ -65,13 +65,25 @@ const SkillsList: React.FC<SkillsListProps> = ({
 
       <div className="time-controls">
         <button onClick={handleSkipTurn} className="time-btn skip-turn">
-          ⚔️ Пропустить ход
+          <span
+            className="material-symbols-rounded btn-icon"
+            aria-hidden="true"
+          >
+            swords
+          </span>
+          Пропустить ход
         </button>
         <button
           onClick={() => setShowTimeModal(true)}
           className="time-btn skip-time"
         >
-          ⏰ Пропустить время
+          <span
+            className="material-symbols-rounded btn-icon"
+            aria-hidden="true"
+          >
+            schedule
+          </span>
+          Пропустить время
         </button>
       </div>
 
@@ -196,7 +208,13 @@ const SkillsList: React.FC<SkillsListProps> = ({
                 className="confirm-btn"
                 disabled={days === 0 && hours === 0 && minutes === 0}
               >
-                ✅ Пропустить
+                <span
+                  className="material-symbols-rounded btn-icon"
+                  aria-hidden="true"
+                >
+                  done
+                </span>
+                Пропустить
               </button>
               <button
                 onClick={() => {
@@ -207,7 +225,13 @@ const SkillsList: React.FC<SkillsListProps> = ({
                 }}
                 className="cancel-btn"
               >
-                ❌ Отмена
+                <span
+                  className="material-symbols-rounded btn-icon"
+                  aria-hidden="true"
+                >
+                  close
+                </span>
+                Отмена
               </button>
             </div>
           </div>

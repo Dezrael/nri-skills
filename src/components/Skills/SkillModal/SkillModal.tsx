@@ -17,7 +17,9 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, isOpen, onClose }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>
-          ✕
+          <span className="material-symbols-rounded" aria-hidden="true">
+            close
+          </span>
         </button>
 
         <div className="modal-header">
@@ -28,7 +30,12 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, isOpen, onClose }) => {
                 className="badge concentration-badge"
                 title="Требует концентрации"
               >
-                ⓒ
+                <span
+                  className="material-symbols-rounded badge-icon"
+                  aria-hidden="true"
+                >
+                  blur_on
+                </span>
               </span>
             )}
             <span className="badge action-type">{skill.actionType}</span>

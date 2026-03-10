@@ -15,6 +15,10 @@
 .load-btn,
 .export-btn,
 .import-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   background: rgba(34, 139, 34, 0.2);
   border: 2px solid #228b22;
   color: #32cd32;
@@ -23,6 +27,14 @@
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
+}
+
+.load-btn:disabled,
+.import-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .save-btn:hover,
@@ -58,6 +70,11 @@
 
 .import-input-hidden {
   display: none;
+}
+
+.btn-icon {
+  font-size: 1.15rem;
+  line-height: 1;
 }
 
 .admin-tabs {

@@ -60,6 +60,14 @@
   font-weight: bold;
   margin-bottom: 0.3rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.title-icon {
+  font-size: 1.3em;
+  line-height: 1;
 }
 
 .App-header p {

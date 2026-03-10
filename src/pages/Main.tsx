@@ -85,8 +85,16 @@ function Main() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>⚔️ DND Skills Selector</h1>
-        <p>Выберите класс и просмотрите выбранные заклинания</p>
+        <h1>
+          <span
+            className="material-symbols-rounded title-icon"
+            aria-hidden="true"
+          >
+            swords
+          </span>
+          НРИ на коленке
+        </h1>
+        <p>Выбор класса и просмотр заклинаний</p>
       </header>
 
       <main className="App-main">
