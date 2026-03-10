@@ -89,6 +89,7 @@
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
+  align-items: center;
 }
 
 .save-btn,
@@ -99,6 +100,12 @@
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
+}
+
+.edit-form .form-actions .save-btn,
+.edit-form .form-actions .cancel-btn {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .save-btn {
@@ -186,6 +193,12 @@
 
   .form-actions {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-actions .save-btn,
+  .form-actions .cancel-btn {
+    width: auto;
   }
 
   .passives-table th,
