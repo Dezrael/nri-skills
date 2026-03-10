@@ -88,6 +88,24 @@
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
+.time-parts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.time-part-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.time-part-field span {
+  color: #a0b6ff;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 .edit-form .form-grid .form-field.checkbox-group {
   display: flex;
   flex-direction: row;
@@ -297,6 +315,10 @@
   }
 
   .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .time-parts-grid {
     grid-template-columns: 1fr;
   }
 

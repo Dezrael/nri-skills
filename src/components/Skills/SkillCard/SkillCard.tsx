@@ -54,6 +54,10 @@ const SkillCard: React.FC<SkillCardProps> = ({
     !!cooldown && (cooldown.inCombatTurns > 0 || cooldown.outCombatMinutes > 0);
   const combatCooldownActive = cooldown && cooldown.inCombatTurns > 0;
   const outCombatCooldownActive = cooldown && cooldown.outCombatMinutes > 0;
+  const inCombatCooldownValue = Number(skill.inCombatCooldown);
+  const hasNumericInCombatCooldown = Number.isFinite(inCombatCooldownValue);
+  const canUseInCombat =
+    hasNumericInCombatCooldown && inCombatCooldownValue !== 0;
   return (
     <div
       className={`skill-card ${skill.concentration ? "concentration" : ""}`}
@@ -172,7 +176,7 @@ const SkillCard: React.FC<SkillCardProps> = ({
         <button
           className="use-skill-btn combat"
           onClick={handleUseInCombat}
-          disabled={skill.inCombatCooldown === "0" || isOnCooldown}
+          disabled={!canUseInCombat || isOnCooldown}
         >
           <span
             className="material-symbols-rounded btn-icon"

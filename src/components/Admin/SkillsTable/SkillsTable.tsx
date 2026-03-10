@@ -17,6 +17,101 @@ interface SkillsTableProps {
   onUpdate: (skills: PlayerSkill[]) => void;
 }
 
+type OutCombatParts = {
+  days: string;
+  hours: string;
+  minutes: string;
+};
+
+const pluralizeRu = (
+  value: number,
+  one: string,
+  few: string,
+  many: string,
+): string => {
+  const mod100 = value % 100;
+  const mod10 = value % 10;
+
+  if (mod100 >= 11 && mod100 <= 14) {
+    return many;
+  }
+
+  if (mod10 === 1) {
+    return one;
+  }
+
+  if (mod10 >= 2 && mod10 <= 4) {
+    return few;
+  }
+
+  return many;
+};
+
+const parseOutCombatCooldown = (value: string): OutCombatParts => {
+  const parts: OutCombatParts = {
+    days: "",
+    hours: "",
+    minutes: "",
+  };
+
+  const matches = Array.from(
+    value.matchAll(
+      /(\d+)\s*(день|дня|дней|час|часа|часов|минута|минуты|минут|day|days|hour|hours|minute|minutes)/gi,
+    ),
+  );
+
+  for (const match of matches) {
+    const amount = match[1];
+    const unit = match[2].toLowerCase();
+
+    if (["день", "дня", "дней", "day", "days"].includes(unit)) {
+      parts.days = amount;
+    }
+
+    if (["час", "часа", "часов", "hour", "hours"].includes(unit)) {
+      parts.hours = amount;
+    }
+
+    if (["минута", "минуты", "минут", "minute", "minutes"].includes(unit)) {
+      parts.minutes = amount;
+    }
+  }
+
+  return parts;
+};
+
+const formatOutCombatCooldown = ({
+  days,
+  hours,
+  minutes,
+}: OutCombatParts): string => {
+  const daysNumber = Number(days) || 0;
+  const hoursNumber = Number(hours) || 0;
+  const minutesNumber = Number(minutes) || 0;
+
+  const resultParts: string[] = [];
+
+  if (daysNumber > 0) {
+    resultParts.push(
+      `${daysNumber} ${pluralizeRu(daysNumber, "день", "дня", "дней")}`,
+    );
+  }
+
+  if (hoursNumber > 0) {
+    resultParts.push(
+      `${hoursNumber} ${pluralizeRu(hoursNumber, "час", "часа", "часов")}`,
+    );
+  }
+
+  if (minutesNumber > 0) {
+    resultParts.push(
+      `${minutesNumber} ${pluralizeRu(minutesNumber, "минута", "минуты", "минут")}`,
+    );
+  }
+
+  return resultParts.join(" ");
+};
+
 function SkillsTable({
   authToken,
   onAuthExpired,
@@ -27,6 +122,11 @@ function SkillsTable({
 }: SkillsTableProps) {
   const [editingSkill, setEditingSkill] = useState<PlayerSkill | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [outCombatParts, setOutCombatParts] = useState<OutCombatParts>({
+    days: "",
+    hours: "",
+    minutes: "",
+  });
 
   const handleAdd = () => {
     const newSkill: PlayerSkill = {
@@ -46,11 +146,13 @@ function SkillsTable({
       isChosen: false,
     };
     setEditingSkill(newSkill);
+    setOutCombatParts({ days: "", hours: "", minutes: "" });
     setIsAdding(true);
   };
 
   const handleEdit = (skill: PlayerSkill) => {
     setEditingSkill({ ...skill });
+    setOutCombatParts(parseOutCombatCooldown(skill.outCombatCooldown || ""));
     setIsAdding(false);
   };
 
@@ -82,10 +184,16 @@ function SkillsTable({
   const handleSave = async () => {
     if (!editingSkill) return;
 
+    const outCombatCooldown = formatOutCombatCooldown(outCombatParts);
+    const skillToSave: PlayerSkill = {
+      ...editingSkill,
+      outCombatCooldown,
+    };
+
     if (
-      !editingSkill.name.trim() ||
-      !editingSkill.shortDescription.trim() ||
-      !editingSkill.description.trim()
+      !skillToSave.name.trim() ||
+      !skillToSave.shortDescription.trim() ||
+      !skillToSave.description.trim()
     ) {
       onNotify(
         "error",
@@ -98,7 +206,7 @@ function SkillsTable({
       if (isAdding) {
         const created = await createSkill(
           {
-            ...editingSkill,
+            ...skillToSave,
             className,
           },
           authToken,
@@ -110,16 +218,17 @@ function SkillsTable({
           throw new Error("У скилла отсутствует ID");
         }
 
+        const skillId = editingSkill.id;
         const updatedFromApi = await updateSkill(
-          editingSkill.id,
+          skillId,
           {
-            ...editingSkill,
+            ...skillToSave,
             className,
           },
           authToken,
         );
 
-        const index = skills.findIndex((s) => s.id === editingSkill.id);
+        const index = skills.findIndex((s) => s.id === skillId);
         if (index !== -1) {
           const updatedSkills = [...skills];
           updatedSkills[index] = updatedFromApi;
@@ -146,12 +255,24 @@ function SkillsTable({
 
   const handleCancel = () => {
     setEditingSkill(null);
+    setOutCombatParts({ days: "", hours: "", minutes: "" });
     setIsAdding(false);
   };
 
   const updateEditingSkill = (field: keyof PlayerSkill, value: any) => {
     if (!editingSkill) return;
     setEditingSkill({ ...editingSkill, [field]: value });
+  };
+
+  const updateOutCombatPart = (field: keyof OutCombatParts, value: string) => {
+    if (value && !/^\d+$/.test(value)) {
+      return;
+    }
+
+    setOutCombatParts((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   return (
@@ -243,15 +364,46 @@ function SkillsTable({
                 }
               />
             </div>
-            <div className="form-field">
+            <div className="form-field full-width">
               <label>КД вне боя:</label>
-              <input
-                type="text"
-                value={editingSkill.outCombatCooldown}
-                onChange={(e) =>
-                  updateEditingSkill("outCombatCooldown", e.target.value)
-                }
-              />
+              <div className="time-parts-grid">
+                <div className="time-part-field">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={outCombatParts.days}
+                    onChange={(e) =>
+                      updateOutCombatPart("days", e.target.value)
+                    }
+                    placeholder="0"
+                  />
+                  <span>дней</span>
+                </div>
+                <div className="time-part-field">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={outCombatParts.hours}
+                    onChange={(e) =>
+                      updateOutCombatPart("hours", e.target.value)
+                    }
+                    placeholder="0"
+                  />
+                  <span>часов</span>
+                </div>
+                <div className="time-part-field">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={outCombatParts.minutes}
+                    onChange={(e) =>
+                      updateOutCombatPart("minutes", e.target.value)
+                    }
+                    placeholder="0"
+                  />
+                  <span>минут</span>
+                </div>
+              </div>
             </div>
             <div className="form-field">
               <label>Заряды вне боя:</label>
