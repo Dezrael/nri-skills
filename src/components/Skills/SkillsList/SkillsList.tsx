@@ -16,6 +16,7 @@ interface SkillsListProps {
   className: string;
   onSelectSkill: (skill: PlayerSkill) => void;
   searchQuery?: string;
+  searchInDescription?: boolean;
 }
 
 type SkillFilterKey = "ready" | "cooldown" | "noCharges" | "pinned";
@@ -32,6 +33,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
   className,
   onSelectSkill,
   searchQuery = "",
+  searchInDescription = false,
 }) => {
   const allChosenSkills = skills.filter((s) => s.isChosen);
 
@@ -41,6 +43,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
         return [
           skill.name,
           skill.shortDescription,
+          ...(searchInDescription ? [skill.description] : []),
           skill.actionType,
           skill.range,
           skill.stat,

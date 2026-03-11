@@ -29,6 +29,7 @@ function Main() {
   const [error, setError] = useState<string | null>(null);
   const [selectedSkill, setSelectedSkill] = useState<PlayerSkill | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchInDescription, setSearchInDescription] = useState(false);
 
   // Загрузка данных из JSON при загрузке приложения
   useEffect(() => {
@@ -90,6 +91,7 @@ function Main() {
     setSelectedClass(className);
     localStorage.setItem(SELECTED_CLASS_STORAGE_KEY, className);
     setSearchQuery("");
+    setSearchInDescription(false);
   };
 
   const classes = Object.keys(skillsData);
@@ -145,6 +147,33 @@ function Main() {
                   >
                     search
                   </span>
+                  {activeTab === "skills" && (
+                    <button
+                      type="button"
+                      className={`search-mode-btn ${
+                        searchInDescription ? "active" : ""
+                      }`}
+                      onClick={() => setSearchInDescription((prev) => !prev)}
+                      aria-pressed={searchInDescription}
+                      aria-label={
+                        searchInDescription
+                          ? "Выключить поиск по полному описанию"
+                          : "Включить поиск по полному описанию"
+                      }
+                      title={
+                        searchInDescription
+                          ? "Поиск по полному описанию включён"
+                          : "Искать в полном описании"
+                      }
+                    >
+                      <span
+                        className="material-symbols-rounded"
+                        aria-hidden="true"
+                      >
+                        article
+                      </span>
+                    </button>
+                  )}
                   <input
                     type="text"
                     className="search-input"
@@ -154,6 +183,7 @@ function Main() {
                     aria-label="Поиск"
                   />
                   <button
+                    type="button"
                     className="search-clear-btn"
                     onClick={() => setSearchQuery("")}
                     aria-label="Очистить поиск"
@@ -173,6 +203,7 @@ function Main() {
                     className={selectedClass || ""}
                     onSelectSkill={setSelectedSkill}
                     searchQuery={searchQuery}
+                    searchInDescription={searchInDescription}
                   />
                 )}
                 {activeTab === "passives" && (
