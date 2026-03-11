@@ -123,10 +123,6 @@ const SkillCard: React.FC<SkillCardProps> = ({
   const combatDurationActive = cooldown && cooldown.durationInCombatTurns > 0;
   const outCombatDurationActive =
     cooldown && cooldown.durationOutCombatMinutes > 0;
-  const inCombatCooldownValue = Number(skill.inCombatCooldown);
-  const hasNumericInCombatCooldown = Number.isFinite(inCombatCooldownValue);
-  const canUseInCombat =
-    hasNumericInCombatCooldown && inCombatCooldownValue !== 0;
   const hasChargeLimit = (Number(skill.outCombatCharges) || 0) > 0;
   const hasChargesAvailable = !charges || charges.current > 0;
   const chargesDisplay = charges
@@ -347,7 +343,7 @@ const SkillCard: React.FC<SkillCardProps> = ({
         <button
           className="use-skill-btn combat"
           onClick={handleUseInCombat}
-          disabled={!canUseInCombat || isOnCooldown || !hasChargesAvailable}
+          disabled={isOnCooldown || !hasChargesAvailable}
         >
           <span
             className="material-symbols-rounded btn-icon"
@@ -360,12 +356,7 @@ const SkillCard: React.FC<SkillCardProps> = ({
         <button
           className="use-skill-btn out-combat"
           onClick={handleUseOutOfCombat}
-          disabled={
-            skill.outCombatCooldown === "-" ||
-            skill.outCombatCooldown === "∞" ||
-            isOnCooldown ||
-            !hasChargesAvailable
-          }
+          disabled={isOnCooldown || !hasChargesAvailable}
         >
           <span
             className="material-symbols-rounded btn-icon"
