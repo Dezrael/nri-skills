@@ -188,6 +188,10 @@
   display: none !important;
 }
 
+.skill-footer {
+  margin-top: auto;
+}
+
 @media (min-width: 768px) {
   .skill-card {
     padding: 1.2rem;
@@ -301,6 +305,13 @@
   opacity: 0.92;
 }
 
+.cooldown-badge.duration.combat,
+.cooldown-badge.duration.out-combat {
+  background: rgba(163, 230, 53, 0.14);
+  border: 2px solid rgba(163, 230, 53, 0.32);
+  color: #d9f99d;
+}
+
 .inline-icon {
   font-size: 1rem;
   vertical-align: middle;
@@ -343,12 +354,18 @@
   color: #93c5fd;
 }
 
+.cooldown-badge.combat:not(.duration),
+.cooldown-badge.out-combat:not(.duration) {
+  background: rgba(224, 184, 102, 0.18);
+  border: 2px solid rgba(224, 184, 102, 0.36);
+  color: #f6d28b;
+}
+
 /* Кнопки использования */
 .skill-actions {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-top: auto;
   padding-top: 0.75rem;
 }
 

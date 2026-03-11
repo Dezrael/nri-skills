@@ -152,9 +152,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
       }
     });
 
-    if (restoredAny) {
-      setCooldownKey((prev) => prev + 1);
-    }
+    return restoredAny;
   };
 
   const restoreLongRestCharges = () => {
@@ -175,9 +173,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
       }
     });
 
-    if (restoredAny) {
-      setCooldownKey((prev) => prev + 1);
-    }
+    return restoredAny;
   };
 
   const handleShortRest = () => {
@@ -191,13 +187,16 @@ const SkillsList: React.FC<SkillsListProps> = ({
   const handleConfirmRest = () => {
     if (pendingRestType === "short") {
       restoreShortRestCharges();
+      skipTime("4 часа");
     }
 
     if (pendingRestType === "long") {
       restoreLongRestCharges();
+      skipTime("8 часов");
     }
 
     setPendingRestType(null);
+    setCooldownKey((prev) => prev + 1);
   };
 
   const handleToggleControls = () => {

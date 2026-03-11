@@ -277,24 +277,49 @@ export const minutesToTimeString = (minutes: number): string => {
 export const playerUseSkillInCombat = (
   className: string,
   skillName: string,
-  cooldownTurns: string,
-  durationTurns: string,
+  inCombatCooldownTurns: string,
+  outCombatCooldown: string,
+  inCombatDurationTurns: string,
+  outCombatDuration: string,
 ) => {
-  const turns = parseInt(cooldownTurns);
-  const hasCooldown = !isNaN(turns) && turns > 0;
-  const duration = Number.parseInt(durationTurns, 10);
-  const hasDuration = Number.isFinite(duration) && duration > 0;
+  const inCombatTurns = Number.parseInt(inCombatCooldownTurns, 10);
+  const hasInCombatCooldown =
+    Number.isFinite(inCombatTurns) && inCombatTurns > 0;
+  const outCombatMinutes = timeStringToMinutes(outCombatCooldown);
+  const hasOutCombatCooldown = outCombatMinutes > 0;
+  const inCombatDuration = Number.parseInt(inCombatDurationTurns, 10);
+  const hasInCombatDuration =
+    Number.isFinite(inCombatDuration) && inCombatDuration > 0;
+  const outCombatDurationMinutes = timeStringToMinutes(outCombatDuration);
+  const hasOutCombatDuration = outCombatDurationMinutes > 0;
 
-  if (!hasCooldown && !hasDuration) return;
+  if (
+    !hasInCombatCooldown &&
+    !hasOutCombatCooldown &&
+    !hasInCombatDuration &&
+    !hasOutCombatDuration
+  ) {
+    return;
+  }
 
   const currentCooldown = getCooldown(className, skillName);
   setCooldown(className, skillName, {
-    inCombatTurns: hasCooldown ? turns : currentCooldown?.inCombatTurns || 0,
-    outCombatMinutes: currentCooldown?.outCombatMinutes || 0,
-    durationInCombatTurns: hasDuration
-      ? duration
+    inCombatTurns: hasInCombatCooldown
+      ? inCombatTurns
+      : currentCooldown?.inCombatTurns || 0,
+    outCombatMinutes: hasInCombatCooldown
+      ? currentCooldown?.outCombatMinutes || 0
+      : hasOutCombatCooldown
+        ? outCombatMinutes
+        : currentCooldown?.outCombatMinutes || 0,
+    durationInCombatTurns: hasInCombatDuration
+      ? inCombatDuration
       : currentCooldown?.durationInCombatTurns || 0,
-    durationOutCombatMinutes: currentCooldown?.durationOutCombatMinutes || 0,
+    durationOutCombatMinutes: hasInCombatDuration
+      ? currentCooldown?.durationOutCombatMinutes || 0
+      : hasOutCombatDuration
+        ? outCombatDurationMinutes
+        : currentCooldown?.durationOutCombatMinutes || 0,
   });
 };
 
@@ -302,25 +327,48 @@ export const playerUseSkillInCombat = (
 export const playerUseSkillOutOfCombat = (
   className: string,
   skillName: string,
-  cooldownStr: string,
-  durationStr: string,
+  inCombatCooldownTurns: string,
+  outCombatCooldown: string,
+  inCombatDurationTurns: string,
+  outCombatDuration: string,
 ) => {
-  const minutes = timeStringToMinutes(cooldownStr);
-  const hasCooldown = minutes > 0;
-  const durationMinutes = timeStringToMinutes(durationStr);
-  const hasDuration = durationMinutes > 0;
+  const inCombatTurns = Number.parseInt(inCombatCooldownTurns, 10);
+  const hasInCombatCooldown =
+    Number.isFinite(inCombatTurns) && inCombatTurns > 0;
+  const outCombatMinutes = timeStringToMinutes(outCombatCooldown);
+  const hasOutCombatCooldown = outCombatMinutes > 0;
+  const inCombatDuration = Number.parseInt(inCombatDurationTurns, 10);
+  const hasInCombatDuration =
+    Number.isFinite(inCombatDuration) && inCombatDuration > 0;
+  const outCombatDurationMinutes = timeStringToMinutes(outCombatDuration);
+  const hasOutCombatDuration = outCombatDurationMinutes > 0;
 
-  if (!hasCooldown && !hasDuration) return;
+  if (
+    !hasInCombatCooldown &&
+    !hasOutCombatCooldown &&
+    !hasInCombatDuration &&
+    !hasOutCombatDuration
+  ) {
+    return;
+  }
 
   const currentCooldown = getCooldown(className, skillName);
   setCooldown(className, skillName, {
-    inCombatTurns: currentCooldown?.inCombatTurns || 0,
-    outCombatMinutes: hasCooldown
-      ? minutes
+    inCombatTurns: hasOutCombatCooldown
+      ? currentCooldown?.inCombatTurns || 0
+      : hasInCombatCooldown
+        ? inCombatTurns
+        : currentCooldown?.inCombatTurns || 0,
+    outCombatMinutes: hasOutCombatCooldown
+      ? outCombatMinutes
       : currentCooldown?.outCombatMinutes || 0,
-    durationInCombatTurns: currentCooldown?.durationInCombatTurns || 0,
-    durationOutCombatMinutes: hasDuration
-      ? durationMinutes
+    durationInCombatTurns: hasOutCombatDuration
+      ? currentCooldown?.durationInCombatTurns || 0
+      : hasInCombatDuration
+        ? inCombatDuration
+        : currentCooldown?.durationInCombatTurns || 0,
+    durationOutCombatMinutes: hasOutCombatDuration
+      ? outCombatDurationMinutes
       : currentCooldown?.durationOutCombatMinutes || 0,
   });
 };
@@ -357,9 +405,26 @@ export const skipTime = (timeStr: string) => {
   if (minutesToSkip <= 0) return;
 
   const cooldowns = getAllCooldowns();
+  const combatTurnsToSkip = minutesToSkip * 10;
   let changed = false;
 
   Object.keys(cooldowns).forEach((key) => {
+    if (cooldowns[key].inCombatTurns > 0) {
+      cooldowns[key].inCombatTurns = Math.max(
+        0,
+        cooldowns[key].inCombatTurns - combatTurnsToSkip,
+      );
+      changed = true;
+    }
+
+    if (cooldowns[key].durationInCombatTurns > 0) {
+      cooldowns[key].durationInCombatTurns = Math.max(
+        0,
+        cooldowns[key].durationInCombatTurns - combatTurnsToSkip,
+      );
+      changed = true;
+    }
+
     if (cooldowns[key].outCombatMinutes > 0) {
       cooldowns[key].outCombatMinutes = Math.max(
         0,
