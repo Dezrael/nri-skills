@@ -211,7 +211,7 @@ const SkillCard: React.FC<SkillCardProps> = ({
         </div>
         {skill.damage !== "0" && (
           <div className="stat">
-            <span className="label">Урон:</span>
+            <span className="label">Урон/исцеление:</span>
             <span className="value">{skill.damage}</span>
           </div>
         )}

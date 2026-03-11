@@ -378,7 +378,7 @@ function SkillsTable({
               />
             </div>
             <div className="form-field">
-              <label>Урон:</label>
+              <label>Урон/исцеление:</label>
               <input
                 type="text"
                 value={editingSkill.damage}
@@ -631,7 +631,7 @@ function SkillsTable({
               <th>Тип действия</th>
               <th>Дальность</th>
               <th>Характеристика</th>
-              <th>Урон</th>
+              <th>Урон/исцеление</th>
               <th>КД в бою</th>
               <th>Тип перезарядки</th>
               <th>Действия</th>

@@ -90,7 +90,7 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, isOpen, onClose }) => {
             )}
             {skill.damage !== "0" && (
               <div className="stat-item">
-                <span className="label">Урон</span>
+                <span className="label">Урон/исцеление</span>
                 <span className="value">{skill.damage}</span>
               </div>
             )}
