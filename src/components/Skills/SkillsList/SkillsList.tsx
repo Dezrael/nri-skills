@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
 import SkillCard from "../SkillCard/SkillCard";
 import {
+  getCooldown,
+  getSkillCharges,
   restoreSkillCharges,
   skipTurn,
   skipTime,
@@ -15,6 +17,15 @@ interface SkillsListProps {
   onSelectSkill: (skill: PlayerSkill) => void;
   searchQuery?: string;
 }
+
+type SkillFilterKey = "ready" | "cooldown" | "noCharges" | "pinned";
+
+const FILTER_LABELS: Record<SkillFilterKey, string> = {
+  ready: "Готово",
+  cooldown: "На кд",
+  noCharges: "Нет зарядов",
+  pinned: "Закреплённые",
+};
 
 const SkillsList: React.FC<SkillsListProps> = ({
   skills,
@@ -71,6 +82,9 @@ const SkillsList: React.FC<SkillsListProps> = ({
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
+  const [activeFilters, setActiveFilters] = useState<Set<SkillFilterKey>>(
+    () => new Set(),
+  );
   const [pinnedSkillIds, setPinnedSkillIds] = useState<Set<number>>(() => {
     const stored = localStorage.getItem(`pinned-skills-${className}`);
     return stored ? new Set(JSON.parse(stored)) : new Set();
@@ -100,10 +114,61 @@ const SkillsList: React.FC<SkillsListProps> = ({
   useEffect(() => {
     const stored = localStorage.getItem(`pinned-skills-${className}`);
     setPinnedSkillIds(stored ? new Set(JSON.parse(stored)) : new Set());
+    setActiveFilters(new Set());
   }, [className]);
 
+  const handleToggleFilter = (filterKey: SkillFilterKey) => {
+    setActiveFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(filterKey)) {
+        next.delete(filterKey);
+      } else {
+        next.add(filterKey);
+      }
+      return next;
+    });
+  };
+
+  const filteredSkills = chosenSkills.filter((skill) => {
+    if (activeFilters.size === 0) {
+      return true;
+    }
+
+    const cooldown = getCooldown(className, skill.name);
+    const charges = getSkillCharges(
+      className,
+      skill.name,
+      skill.outCombatCharges,
+    );
+    const isPinned = skill.id ? pinnedSkillIds.has(skill.id) : false;
+    const isOnCooldown =
+      !!cooldown &&
+      (cooldown.inCombatTurns > 0 || cooldown.outCombatMinutes > 0);
+    const hasChargesAvailable = !charges || charges.current > 0;
+    const hasNoCharges = !!charges && charges.current <= 0;
+    const isReady = !isOnCooldown && hasChargesAvailable;
+
+    if (activeFilters.has("ready") && !isReady) {
+      return false;
+    }
+
+    if (activeFilters.has("cooldown") && !isOnCooldown) {
+      return false;
+    }
+
+    if (activeFilters.has("noCharges") && !hasNoCharges) {
+      return false;
+    }
+
+    if (activeFilters.has("pinned") && !isPinned) {
+      return false;
+    }
+
+    return true;
+  });
+
   const visibleSkills = shouldShowCategoryTabs
-    ? chosenSkills
+    ? filteredSkills
         .filter((skill) => {
           const normalizedCategory = skill.category?.trim();
           const categoryLabel =
@@ -119,7 +184,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
           if (!aPinned && bPinned) return 1;
           return 0;
         })
-    : chosenSkills.sort((a, b) => {
+    : filteredSkills.sort((a, b) => {
         const aPinned = a.id ? pinnedSkillIds.has(a.id) : false;
         const bPinned = b.id ? pinnedSkillIds.has(b.id) : false;
         if (aPinned && !bPinned) return -1;
@@ -239,6 +304,22 @@ const SkillsList: React.FC<SkillsListProps> = ({
     <div className="skills-list-container">
       <div className="skills-header">
         <h2>Выбранные заклинания</h2>
+      </div>
+
+      <div className="skill-filters" aria-label="Фильтры заклинаний">
+        {(Object.keys(FILTER_LABELS) as SkillFilterKey[]).map((filterKey) => (
+          <button
+            key={filterKey}
+            type="button"
+            className={`skill-filter-chip ${
+              activeFilters.has(filterKey) ? "active" : ""
+            }`}
+            onClick={() => handleToggleFilter(filterKey)}
+            aria-pressed={activeFilters.has(filterKey)}
+          >
+            {FILTER_LABELS[filterKey]}
+          </button>
+        ))}
       </div>
 
       <div className="floating-controls-shell">
@@ -518,17 +599,21 @@ const SkillsList: React.FC<SkillsListProps> = ({
       )}
 
       <div className="skills-list">
-        {visibleSkills.map((skill) => (
-          <SkillCard
-            key={`${skill.name}-${cooldownKey}`}
-            skill={skill}
-            className={className}
-            onSelectSkill={onSelectSkill}
-            onCooldownChange={() => setCooldownKey((prev) => prev + 1)}
-            isPinned={skill.id ? pinnedSkillIds.has(skill.id) : false}
-            onTogglePin={handleTogglePin}
-          />
-        ))}
+        {visibleSkills.length === 0 ? (
+          <div className="skills-list empty">Ничего не найдено</div>
+        ) : (
+          visibleSkills.map((skill) => (
+            <SkillCard
+              key={`${skill.name}-${cooldownKey}`}
+              skill={skill}
+              className={className}
+              onSelectSkill={onSelectSkill}
+              onCooldownChange={() => setCooldownKey((prev) => prev + 1)}
+              isPinned={skill.id ? pinnedSkillIds.has(skill.id) : false}
+              onTogglePin={handleTogglePin}
+            />
+          ))
+        )}
       </div>
     </div>
   );
