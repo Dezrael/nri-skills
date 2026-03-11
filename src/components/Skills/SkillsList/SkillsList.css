@@ -210,7 +210,7 @@
   font-size: 1.34rem;
 }
 
-@media (max-width: 400px) {
+@media (max-width: 500px) {
   .combat-mode-toggle {
     margin-left: 0;
     width: 100%;
@@ -464,7 +464,7 @@
   }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 500px) {
   .floating-controls-shell {
     right: 0.5rem;
     align-items: stretch;
