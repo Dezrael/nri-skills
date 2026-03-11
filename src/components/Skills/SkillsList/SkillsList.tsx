@@ -37,6 +37,7 @@ const SORT_LABELS: Record<SkillSortMode, string> = {
 };
 
 const SORT_OPTIONS: SkillSortMode[] = ["pinned", "ready", "actionType"];
+const COMBAT_MODE_STORAGE_KEY_PREFIX = "combat-mode";
 
 const SkillsList: React.FC<SkillsListProps> = ({
   skills,
@@ -96,6 +97,12 @@ const SkillsList: React.FC<SkillsListProps> = ({
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
+  const [isCombatMode, setIsCombatMode] = useState(() => {
+    const stored = localStorage.getItem(
+      `${COMBAT_MODE_STORAGE_KEY_PREFIX}-${className}`,
+    );
+    return stored === "true";
+  });
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<SkillFilterKey>>(
     () => new Set(),
@@ -146,7 +153,19 @@ const SkillsList: React.FC<SkillsListProps> = ({
     setPinnedSkillIds(stored ? new Set(JSON.parse(stored)) : new Set());
     setActiveFilters(new Set());
     setActiveSort("pinned");
+
+    const storedCombatMode = localStorage.getItem(
+      `${COMBAT_MODE_STORAGE_KEY_PREFIX}-${className}`,
+    );
+    setIsCombatMode(storedCombatMode === "true");
   }, [className]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      `${COMBAT_MODE_STORAGE_KEY_PREFIX}-${className}`,
+      String(isCombatMode),
+    );
+  }, [className, isCombatMode]);
 
   useEffect(() => {
     if (!feedbackMessage) {
@@ -415,7 +434,9 @@ const SkillsList: React.FC<SkillsListProps> = ({
   }
 
   return (
-    <div className="skills-list-container">
+    <div
+      className={`skills-list-container ${isCombatMode ? "combat-mode" : ""}`}
+    >
       <div className="skills-header">
         <h2>Выбранные заклинания</h2>
       </div>
@@ -455,6 +476,20 @@ const SkillsList: React.FC<SkillsListProps> = ({
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          className={`combat-mode-toggle ${isCombatMode ? "active" : ""}`}
+          onClick={() => setIsCombatMode((prev) => !prev)}
+          aria-pressed={isCombatMode}
+          title={
+            isCombatMode ? "Выключить боевой режим" : "Включить боевой режим"
+          }
+        >
+          <span className="material-symbols-rounded" aria-hidden="true">
+            swords
+          </span>
+          {isCombatMode ? "Боевой режим: ON" : "Боевой режим"}
+        </button>
       </div>
 
       {feedbackMessage && (

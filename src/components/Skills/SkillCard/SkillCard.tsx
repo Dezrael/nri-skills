@@ -153,7 +153,23 @@ const SkillCard: React.FC<SkillCardProps> = ({
       onClick={() => onSelectSkill(skill)}
     >
       <div className="skill-header">
-        <h3 className="skill-name">{skill.name}</h3>
+        <div className="skill-header-top">
+          <h3 className="skill-name">{skill.name}</h3>
+          <button
+            type="button"
+            className={`pin-btn ${isPinned ? "pinned" : ""}`}
+            onClick={handleTogglePin}
+            title={isPinned ? "Открепить заклинание" : "Закрепить заклинание"}
+            aria-label={isPinned ? "Открепить" : "Закрепить"}
+          >
+            <span
+              className="material-symbols-rounded pin-icon"
+              aria-hidden="true"
+            >
+              {isPinned ? "lock" : "lock_open"}
+            </span>
+          </button>
+        </div>
         <div className="skill-badges">
           {skill.concentration && (
             <span
@@ -172,20 +188,6 @@ const SkillCard: React.FC<SkillCardProps> = ({
             <span className="badge action-type">{skill.actionType}</span>
           )}
         </div>
-        <button
-          type="button"
-          className={`pin-btn ${isPinned ? "pinned" : ""}`}
-          onClick={handleTogglePin}
-          title={isPinned ? "Открепить заклинание" : "Закрепить заклинание"}
-          aria-label={isPinned ? "Открепить" : "Закрепить"}
-        >
-          <span
-            className="material-symbols-rounded pin-icon"
-            aria-hidden="true"
-          >
-            {isPinned ? "lock" : "lock_open"}
-          </span>
-        </button>
       </div>
 
       <p className="short-description">{skill.shortDescription}</p>
