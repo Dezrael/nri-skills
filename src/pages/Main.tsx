@@ -30,6 +30,9 @@ function Main() {
   const [selectedSkill, setSelectedSkill] = useState<PlayerSkill | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInDescription, setSearchInDescription] = useState(false);
+  const [visibleSkillsCount, setVisibleSkillsCount] = useState<number | null>(
+    null,
+  );
 
   // Загрузка данных из JSON при загрузке приложения
   useEffect(() => {
@@ -92,20 +95,83 @@ function Main() {
     localStorage.setItem(SELECTED_CLASS_STORAGE_KEY, className);
     setSearchQuery("");
     setSearchInDescription(false);
+    setVisibleSkillsCount(null);
   };
 
   const classes = Object.keys(skillsData);
 
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+
+  const searchedSkillsCount = skills
+    .filter((skill) => skill.isChosen)
+    .filter((skill) => {
+      if (!normalizedSearchQuery) {
+        return true;
+      }
+
+      return [
+        skill.name,
+        skill.shortDescription,
+        ...(searchInDescription ? [skill.description] : []),
+        skill.actionType,
+        skill.range,
+        skill.stat,
+        skill.durationInCombat,
+        skill.durationOutOfCombat,
+        skill.damage,
+        skill.savingThrow,
+        skill.inCombatCooldown,
+        skill.outCombatCooldown,
+        skill.outCombatCharges,
+        skill.cooldownType,
+      ].some((field) => field?.toLowerCase().includes(normalizedSearchQuery));
+    }).length;
+
+  const searchedPassivesCount = passives.filter((passive) => {
+    if (!normalizedSearchQuery) {
+      return true;
+    }
+
+    return [passive.name, passive.text].some((field) =>
+      field?.toLowerCase().includes(normalizedSearchQuery),
+    );
+  }).length;
+
+  const searchedMushroomsCount = mushrooms.filter((mushroom) => {
+    if (!normalizedSearchQuery) {
+      return true;
+    }
+
+    return [
+      mushroom.name,
+      mushroom.baseEffect,
+      mushroom.activationEffect,
+      mushroom.summonEffect,
+      mushroom.aspectEffect,
+    ].some((field) => field?.toLowerCase().includes(normalizedSearchQuery));
+  }).length;
+
+  const skillsTabCount =
+    activeTab === "skills" && visibleSkillsCount !== null
+      ? visibleSkillsCount
+      : searchedSkillsCount;
+
   const baseTabs = [
-    { id: "skills", label: "Заклинания" },
-    { id: "passives", label: "Пассивные способности" },
+    { id: "skills", label: `Заклинания (${skillsTabCount})` },
+    {
+      id: "passives",
+      label: `Пассивные способности (${searchedPassivesCount})`,
+    },
   ];
 
   const hasMushroomsForSelectedClass =
     !!selectedClass && (skillsData[selectedClass]?.mushrooms?.length || 0) > 0;
 
   const tabs = hasMushroomsForSelectedClass
-    ? [...baseTabs, { id: "mushrooms", label: "Грибы" }]
+    ? [
+        ...baseTabs,
+        { id: "mushrooms", label: `Грибы (${searchedMushroomsCount})` },
+      ]
     : baseTabs;
 
   return (
@@ -204,6 +270,7 @@ function Main() {
                     onSelectSkill={setSelectedSkill}
                     searchQuery={searchQuery}
                     searchInDescription={searchInDescription}
+                    onVisibleCountChange={setVisibleSkillsCount}
                   />
                 )}
                 {activeTab === "passives" && (

@@ -17,9 +17,11 @@ interface SkillsListProps {
   onSelectSkill: (skill: PlayerSkill) => void;
   searchQuery?: string;
   searchInDescription?: boolean;
+  onVisibleCountChange?: (count: number) => void;
 }
 
 type SkillFilterKey = "ready" | "cooldown" | "noCharges" | "pinned";
+type SkillSortMode = "pinned" | "ready" | "actionType";
 
 const FILTER_LABELS: Record<SkillFilterKey, string> = {
   ready: "Готово",
@@ -28,12 +30,21 @@ const FILTER_LABELS: Record<SkillFilterKey, string> = {
   pinned: "Закреплённые",
 };
 
+const SORT_LABELS: Record<SkillSortMode, string> = {
+  pinned: "Закреплённые",
+  ready: "Сначала готовые",
+  actionType: "По типу действия",
+};
+
+const SORT_OPTIONS: SkillSortMode[] = ["pinned", "ready", "actionType"];
+
 const SkillsList: React.FC<SkillsListProps> = ({
   skills,
   className,
   onSelectSkill,
   searchQuery = "",
   searchInDescription = false,
+  onVisibleCountChange,
 }) => {
   const allChosenSkills = skills.filter((s) => s.isChosen);
 
@@ -88,10 +99,25 @@ const SkillsList: React.FC<SkillsListProps> = ({
   const [activeFilters, setActiveFilters] = useState<Set<SkillFilterKey>>(
     () => new Set(),
   );
+  const [activeSort, setActiveSort] = useState<SkillSortMode>("pinned");
   const [pinnedSkillIds, setPinnedSkillIds] = useState<Set<number>>(() => {
     const stored = localStorage.getItem(`pinned-skills-${className}`);
     return stored ? new Set(JSON.parse(stored)) : new Set();
   });
+
+  const getCategoryLabel = (skill: PlayerSkill) => {
+    const normalizedCategory = skill.category?.trim();
+    return normalizedCategory && normalizedCategory.length > 0
+      ? normalizedCategory
+      : "Основные";
+  };
+
+  const getActionTypeLabel = (skill: PlayerSkill) => {
+    const normalizedActionType = skill.actionType?.trim();
+    return normalizedActionType && normalizedActionType !== "-"
+      ? normalizedActionType
+      : "Без типа";
+  };
 
   const handleTogglePin = (skillId: number | undefined) => {
     if (skillId === undefined) return;
@@ -118,6 +144,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
     const stored = localStorage.getItem(`pinned-skills-${className}`);
     setPinnedSkillIds(stored ? new Set(JSON.parse(stored)) : new Set());
     setActiveFilters(new Set());
+    setActiveSort("pinned");
   }, [className]);
 
   const handleToggleFilter = (filterKey: SkillFilterKey) => {
@@ -132,11 +159,19 @@ const SkillsList: React.FC<SkillsListProps> = ({
     });
   };
 
-  const filteredSkills = chosenSkills.filter((skill) => {
-    if (activeFilters.size === 0) {
-      return true;
+  const skillStateMap = new Map<
+    PlayerSkill,
+    {
+      isPinned: boolean;
+      isOnCooldown: boolean;
+      hasNoCharges: boolean;
+      isReady: boolean;
+      categoryLabel: string;
+      actionTypeLabel: string;
     }
+  >();
 
+  chosenSkills.forEach((skill) => {
     const cooldown = getCooldown(className, skill.name);
     const charges = getSkillCharges(
       className,
@@ -151,49 +186,99 @@ const SkillsList: React.FC<SkillsListProps> = ({
     const hasNoCharges = !!charges && charges.current <= 0;
     const isReady = !isOnCooldown && hasChargesAvailable;
 
-    if (activeFilters.has("ready") && !isReady) {
+    skillStateMap.set(skill, {
+      isPinned,
+      isOnCooldown,
+      hasNoCharges,
+      isReady,
+      categoryLabel: getCategoryLabel(skill),
+      actionTypeLabel: getActionTypeLabel(skill),
+    });
+  });
+
+  const filteredSkills = chosenSkills.filter((skill) => {
+    if (activeFilters.size === 0) {
+      return true;
+    }
+
+    const skillState = skillStateMap.get(skill);
+    if (!skillState) {
+      return true;
+    }
+
+    if (activeFilters.has("ready") && !skillState.isReady) {
       return false;
     }
 
-    if (activeFilters.has("cooldown") && !isOnCooldown) {
+    if (activeFilters.has("cooldown") && !skillState.isOnCooldown) {
       return false;
     }
 
-    if (activeFilters.has("noCharges") && !hasNoCharges) {
+    if (activeFilters.has("noCharges") && !skillState.hasNoCharges) {
       return false;
     }
 
-    if (activeFilters.has("pinned") && !isPinned) {
+    if (activeFilters.has("pinned") && !skillState.isPinned) {
       return false;
     }
 
     return true;
   });
 
-  const visibleSkills = shouldShowCategoryTabs
-    ? filteredSkills
-        .filter((skill) => {
-          const normalizedCategory = skill.category?.trim();
-          const categoryLabel =
-            normalizedCategory && normalizedCategory.length > 0
-              ? normalizedCategory
-              : "Основные";
-          return categoryLabel === activeCategoryTab;
-        })
-        .sort((a, b) => {
-          const aPinned = a.id ? pinnedSkillIds.has(a.id) : false;
-          const bPinned = b.id ? pinnedSkillIds.has(b.id) : false;
-          if (aPinned && !bPinned) return -1;
-          if (!aPinned && bPinned) return 1;
-          return 0;
-        })
-    : filteredSkills.sort((a, b) => {
-        const aPinned = a.id ? pinnedSkillIds.has(a.id) : false;
-        const bPinned = b.id ? pinnedSkillIds.has(b.id) : false;
-        if (aPinned && !bPinned) return -1;
-        if (!aPinned && bPinned) return 1;
-        return 0;
-      });
+  const categoryFilteredSkills = shouldShowCategoryTabs
+    ? filteredSkills.filter((skill) => {
+        const categoryLabel = skillStateMap.get(skill)?.categoryLabel;
+        return categoryLabel === activeCategoryTab;
+      })
+    : filteredSkills;
+
+  const visibleSkills = [...categoryFilteredSkills].sort((a, b) => {
+    const aState = skillStateMap.get(a);
+    const bState = skillStateMap.get(b);
+    const aName = a.name || "";
+    const bName = b.name || "";
+
+    if (!aState || !bState) {
+      return aName.localeCompare(bName, "ru");
+    }
+
+    if (activeSort === "pinned") {
+      if (aState.isPinned && !bState.isPinned) return -1;
+      if (!aState.isPinned && bState.isPinned) return 1;
+      return aName.localeCompare(bName, "ru");
+    }
+
+    if (activeSort === "ready") {
+      if (aState.isReady && !bState.isReady) return -1;
+      if (!aState.isReady && bState.isReady) return 1;
+      return aName.localeCompare(bName, "ru");
+    }
+
+    if (
+      aState.actionTypeLabel === "Без типа" &&
+      bState.actionTypeLabel !== "Без типа"
+    )
+      return 1;
+    if (
+      aState.actionTypeLabel !== "Без типа" &&
+      bState.actionTypeLabel === "Без типа"
+    )
+      return -1;
+
+    const actionTypeCompare = aState.actionTypeLabel.localeCompare(
+      bState.actionTypeLabel,
+      "ru",
+    );
+    if (actionTypeCompare !== 0) {
+      return actionTypeCompare;
+    }
+
+    return aName.localeCompare(bName, "ru");
+  });
+
+  useEffect(() => {
+    onVisibleCountChange?.(visibleSkills.length);
+  }, [onVisibleCountChange, visibleSkills.length]);
 
   const handleSkipTurn = () => {
     setPendingRestType(null);
@@ -323,6 +408,27 @@ const SkillsList: React.FC<SkillsListProps> = ({
             {FILTER_LABELS[filterKey]}
           </button>
         ))}
+      </div>
+
+      <div className="skill-sort-row">
+        <label className="skill-sort-label" htmlFor="skill-sort-select">
+          <span className="material-symbols-rounded" aria-hidden="true">
+            sort
+          </span>
+          Сортировка:
+        </label>
+        <select
+          id="skill-sort-select"
+          className="skill-sort-select"
+          value={activeSort}
+          onChange={(e) => setActiveSort(e.target.value as SkillSortMode)}
+        >
+          {SORT_OPTIONS.map((sortKey) => (
+            <option key={sortKey} value={sortKey}>
+              {SORT_LABELS[sortKey]}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="floating-controls-shell">
