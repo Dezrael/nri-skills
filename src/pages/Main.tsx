@@ -144,10 +144,16 @@ function Main() {
                   />
                 )}
                 {activeTab === "passives" && (
-                  <PassivesList passives={passives} />
+                  <PassivesList
+                    passives={passives}
+                    className={selectedClass || ""}
+                  />
                 )}
                 {activeTab === "mushrooms" && hasMushroomsForSelectedClass && (
-                  <MushroomsList mushrooms={mushrooms} />
+                  <MushroomsList
+                    mushrooms={mushrooms}
+                    className={selectedClass || ""}
+                  />
                 )}
               </>
             )}

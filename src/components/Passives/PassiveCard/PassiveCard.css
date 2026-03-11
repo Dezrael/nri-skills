@@ -17,6 +17,10 @@
 }
 
 .passive-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
 
@@ -26,6 +30,33 @@
   color: #667eea;
   font-weight: bold;
   line-height: 1.2;
+  flex: 1;
+}
+
+.passive-card .pin-btn {
+  background: none;
+  border: none;
+  padding: 0.15rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  transition: all 0.2s ease;
+  flex: 0 0 auto;
+}
+
+.passive-card .pin-btn:hover {
+  color: #a0b6ff;
+  transform: scale(1.1);
+}
+
+.passive-card .pin-btn.pinned {
+  color: #fbbf24;
+}
+
+.passive-card .pin-icon {
+  font-size: 1.25rem;
 }
 
 .passive-text {
