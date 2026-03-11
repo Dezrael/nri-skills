@@ -96,6 +96,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<SkillFilterKey>>(
     () => new Set(),
   );
@@ -146,6 +147,18 @@ const SkillsList: React.FC<SkillsListProps> = ({
     setActiveFilters(new Set());
     setActiveSort("pinned");
   }, [className]);
+
+  useEffect(() => {
+    if (!feedbackMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setFeedbackMessage(null);
+    }, 2200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [feedbackMessage]);
 
   const handleToggleFilter = (filterKey: SkillFilterKey) => {
     setActiveFilters((prev) => {
@@ -284,6 +297,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
     setPendingRestType(null);
     skipTurn();
     setCooldownKey((prev) => prev + 1); // Trigger re-render
+    setFeedbackMessage("Пропущен 1 ход");
   };
 
   const restoreShortRestCharges = () => {
@@ -338,18 +352,29 @@ const SkillsList: React.FC<SkillsListProps> = ({
   };
 
   const handleConfirmRest = () => {
+    let feedback = "";
+
     if (pendingRestType === "short") {
-      restoreShortRestCharges();
+      const restored = restoreShortRestCharges();
       skipTime("4 часа");
+      feedback = restored
+        ? "Прошло 4 часа, восстановлены заряды"
+        : "Прошло 4 часа";
     }
 
     if (pendingRestType === "long") {
-      restoreLongRestCharges();
+      const restored = restoreLongRestCharges();
       skipTime("8 часов");
+      feedback = restored
+        ? "Прошло 8 часов, восстановлены заряды"
+        : "Прошло 8 часов";
     }
 
     setPendingRestType(null);
     setCooldownKey((prev) => prev + 1);
+    if (feedback) {
+      setFeedbackMessage(feedback);
+    }
   };
 
   const handleToggleControls = () => {
@@ -381,6 +406,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
       setHours(0);
       setMinutes(0);
       setShowTimeModal(false);
+      setFeedbackMessage(`Прошло: ${parts.join(" ")}`);
     }
   };
 
@@ -430,6 +456,12 @@ const SkillsList: React.FC<SkillsListProps> = ({
           ))}
         </select>
       </div>
+
+      {feedbackMessage && (
+        <div className="action-feedback-toast" role="status" aria-live="polite">
+          {feedbackMessage}
+        </div>
+      )}
 
       <div className="floating-controls-shell">
         {pendingRestType && (
@@ -718,6 +750,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
               className={className}
               onSelectSkill={onSelectSkill}
               onCooldownChange={() => setCooldownKey((prev) => prev + 1)}
+              onActionFeedback={setFeedbackMessage}
               isPinned={skill.id ? pinnedSkillIds.has(skill.id) : false}
               onTogglePin={handleTogglePin}
             />

@@ -16,6 +16,7 @@ interface SkillCardProps {
   className: string;
   onSelectSkill: (skill: PlayerSkill) => void;
   onCooldownChange?: () => void;
+  onActionFeedback?: (message: string) => void;
   isPinned?: boolean;
   onTogglePin?: (skillId: number | undefined) => void;
 }
@@ -25,6 +26,7 @@ const SkillCard: React.FC<SkillCardProps> = ({
   className,
   onSelectSkill,
   onCooldownChange,
+  onActionFeedback,
   isPinned,
   onTogglePin,
 }) => {
@@ -66,6 +68,7 @@ const SkillCard: React.FC<SkillCardProps> = ({
     );
     setCooldown(getCooldown(className, skill.name));
     onCooldownChange?.();
+    onActionFeedback?.(`Использовано: ${skill.name}`);
   };
 
   const handleUseOutOfCombat = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -96,6 +99,7 @@ const SkillCard: React.FC<SkillCardProps> = ({
     );
     setCooldown(getCooldown(className, skill.name));
     onCooldownChange?.();
+    onActionFeedback?.(`Использовано: ${skill.name}`);
   };
 
   const handleTogglePin = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -118,6 +122,11 @@ const SkillCard: React.FC<SkillCardProps> = ({
       clearSkillCooldownField(className, skill.name, field);
       setCooldown(getCooldown(className, skill.name));
       onCooldownChange?.();
+      onActionFeedback?.(
+        field === "inCombatTurns" || field === "outCombatMinutes"
+          ? "Перезарядка сброшена"
+          : "Длительность сброшена",
+      );
     };
 
   const isOnCooldown =
