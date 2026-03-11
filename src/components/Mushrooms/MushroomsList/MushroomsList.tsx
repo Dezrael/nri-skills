@@ -6,11 +6,13 @@ import "./MushroomsList.css";
 interface MushroomsListProps {
   mushrooms: Mushroom[];
   className: string;
+  searchQuery?: string;
 }
 
 const MushroomsList: React.FC<MushroomsListProps> = ({
   mushrooms,
   className,
+  searchQuery = "",
 }) => {
   const [pinnedIds, setPinnedIds] = useState<Set<number>>(() => {
     const stored = localStorage.getItem(`pinned-mushrooms-${className}`);
@@ -37,7 +39,20 @@ const MushroomsList: React.FC<MushroomsListProps> = ({
     );
   };
 
-  const sorted = [...mushrooms].sort((a, b) => {
+  const filtered = searchQuery.trim()
+    ? mushrooms.filter((m) => {
+        const q = searchQuery.trim().toLowerCase();
+        return [
+          m.name,
+          m.baseEffect,
+          m.activationEffect,
+          m.summonEffect,
+          m.aspectEffect,
+        ].some((f) => f?.toLowerCase().includes(q));
+      })
+    : mushrooms;
+
+  const sorted = [...filtered].sort((a, b) => {
     const aPinned = a.id ? pinnedIds.has(a.id) : false;
     const bPinned = b.id ? pinnedIds.has(b.id) : false;
     if (aPinned && !bPinned) return -1;
@@ -55,14 +70,18 @@ const MushroomsList: React.FC<MushroomsListProps> = ({
         <h2>Грибы</h2>
       </div>
       <div className="mushrooms-list">
-        {sorted.map((mushroom) => (
-          <MushroomCard
-            key={mushroom.name}
-            mushroom={mushroom}
-            isPinned={mushroom.id ? pinnedIds.has(mushroom.id) : false}
-            onTogglePin={handleTogglePin}
-          />
-        ))}
+        {sorted.length === 0 ? (
+          <div className="mushrooms-list empty">Ничего не найдено</div>
+        ) : (
+          sorted.map((mushroom) => (
+            <MushroomCard
+              key={mushroom.name}
+              mushroom={mushroom}
+              isPinned={mushroom.id ? pinnedIds.has(mushroom.id) : false}
+              onTogglePin={handleTogglePin}
+            />
+          ))
+        )}
       </div>
     </div>
   );

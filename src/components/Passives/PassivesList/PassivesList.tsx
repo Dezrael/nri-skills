@@ -6,9 +6,14 @@ import "./PassivesList.css";
 interface PassivesListProps {
   passives: PassiveAbility[];
   className: string;
+  searchQuery?: string;
 }
 
-const PassivesList: React.FC<PassivesListProps> = ({ passives, className }) => {
+const PassivesList: React.FC<PassivesListProps> = ({
+  passives,
+  className,
+  searchQuery = "",
+}) => {
   const [pinnedIds, setPinnedIds] = useState<Set<number>>(() => {
     const stored = localStorage.getItem(`pinned-passives-${className}`);
     return stored ? new Set(JSON.parse(stored)) : new Set();
@@ -34,7 +39,14 @@ const PassivesList: React.FC<PassivesListProps> = ({ passives, className }) => {
     );
   };
 
-  const sorted = [...passives].sort((a, b) => {
+  const filtered = searchQuery.trim()
+    ? passives.filter((p) => {
+        const q = searchQuery.trim().toLowerCase();
+        return [p.name, p.text].some((f) => f?.toLowerCase().includes(q));
+      })
+    : passives;
+
+  const sorted = [...filtered].sort((a, b) => {
     const aPinned = a.id ? pinnedIds.has(a.id) : false;
     const bPinned = b.id ? pinnedIds.has(b.id) : false;
     if (aPinned && !bPinned) return -1;
@@ -54,14 +66,18 @@ const PassivesList: React.FC<PassivesListProps> = ({ passives, className }) => {
         <h2>Пассивные способности</h2>
       </div>
       <div className="passives-list">
-        {sorted.map((passive) => (
-          <PassiveCard
-            key={passive.name}
-            passive={passive}
-            isPinned={passive.id ? pinnedIds.has(passive.id) : false}
-            onTogglePin={handleTogglePin}
-          />
-        ))}
+        {sorted.length === 0 ? (
+          <div className="passives-list empty">Ничего не найдено</div>
+        ) : (
+          sorted.map((passive) => (
+            <PassiveCard
+              key={passive.name}
+              passive={passive}
+              isPinned={passive.id ? pinnedIds.has(passive.id) : false}
+              onTogglePin={handleTogglePin}
+            />
+          ))
+        )}
       </div>
     </div>
   );

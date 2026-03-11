@@ -13,17 +13,40 @@ interface SkillsListProps {
   skills: PlayerSkill[];
   className: string;
   onSelectSkill: (skill: PlayerSkill) => void;
+  searchQuery?: string;
 }
 
 const SkillsList: React.FC<SkillsListProps> = ({
   skills,
   className,
   onSelectSkill,
+  searchQuery = "",
 }) => {
-  const chosenSkills = skills.filter((s) => s.isChosen);
+  const allChosenSkills = skills.filter((s) => s.isChosen);
+
+  const chosenSkills = searchQuery.trim()
+    ? allChosenSkills.filter((skill) => {
+        const q = searchQuery.trim().toLowerCase();
+        return [
+          skill.name,
+          skill.shortDescription,
+          skill.actionType,
+          skill.range,
+          skill.stat,
+          skill.durationInCombat,
+          skill.durationOutOfCombat,
+          skill.damage,
+          skill.savingThrow,
+          skill.inCombatCooldown,
+          skill.outCombatCooldown,
+          skill.outCombatCharges,
+          skill.cooldownType,
+        ].some((f) => f?.toLowerCase().includes(q));
+      })
+    : allChosenSkills;
   const categoryLabels = Array.from(
     new Set(
-      chosenSkills.map((skill) => {
+      allChosenSkills.map((skill) => {
         const normalizedCategory = skill.category?.trim();
         return normalizedCategory && normalizedCategory.length > 0
           ? normalizedCategory
@@ -35,7 +58,8 @@ const SkillsList: React.FC<SkillsListProps> = ({
     if (b === "Основные") return 1;
     return a.localeCompare(b);
   });
-  const shouldShowCategoryTabs = categoryLabels.length > 1;
+  const shouldShowCategoryTabs =
+    categoryLabels.length > 1 && !searchQuery.trim();
   const defaultCategory = categoryLabels[0] || "Основные";
   const [activeCategoryTab, setActiveCategoryTab] = useState(defaultCategory);
   const [cooldownKey, setCooldownKey] = useState(0);

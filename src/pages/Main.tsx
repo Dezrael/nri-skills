@@ -28,6 +28,7 @@ function Main() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkill, setSelectedSkill] = useState<PlayerSkill | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Загрузка данных из JSON при загрузке приложения
   useEffect(() => {
@@ -88,6 +89,7 @@ function Main() {
   const handleSelectClass = (className: string) => {
     setSelectedClass(className);
     localStorage.setItem(SELECTED_CLASS_STORAGE_KEY, className);
+    setSearchQuery("");
   };
 
   const classes = Object.keys(skillsData);
@@ -136,23 +138,55 @@ function Main() {
                   activeTab={activeTab}
                   onTabChange={setActiveTab}
                 />
+                <div className="search-bar">
+                  <span
+                    className="material-symbols-rounded search-icon"
+                    aria-hidden="true"
+                  >
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Поиск..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="Поиск"
+                  />
+                  <button
+                    className="search-clear-btn"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Очистить поиск"
+                    style={{ visibility: searchQuery ? "visible" : "hidden" }}
+                  >
+                    <span
+                      className="material-symbols-rounded"
+                      aria-hidden="true"
+                    >
+                      close
+                    </span>
+                  </button>
+                </div>
                 {activeTab === "skills" && (
                   <SkillsList
                     skills={skills}
                     className={selectedClass || ""}
                     onSelectSkill={setSelectedSkill}
+                    searchQuery={searchQuery}
                   />
                 )}
                 {activeTab === "passives" && (
                   <PassivesList
                     passives={passives}
                     className={selectedClass || ""}
+                    searchQuery={searchQuery}
                   />
                 )}
                 {activeTab === "mushrooms" && hasMushroomsForSelectedClass && (
                   <MushroomsList
                     mushrooms={mushrooms}
                     className={selectedClass || ""}
+                    searchQuery={searchQuery}
                   />
                 )}
               </>
