@@ -58,7 +58,9 @@ const PassivesList: React.FC<PassivesListProps> = ({
 
   if (chosenPassives.length === 0) {
     return (
-      <div className="passives-list empty">Нет выбранных пассивных способностей</div>
+      <div className="passives-list empty">
+        Нет выбранных пассивных способностей
+      </div>
     );
   }
 
