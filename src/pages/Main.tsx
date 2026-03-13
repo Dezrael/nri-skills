@@ -127,29 +127,33 @@ function Main() {
       ].some((field) => field?.toLowerCase().includes(normalizedSearchQuery));
     }).length;
 
-  const searchedPassivesCount = passives.filter((passive) => {
-    if (!normalizedSearchQuery) {
-      return true;
-    }
+  const searchedPassivesCount = passives
+    .filter((passive) => passive.isChosen)
+    .filter((passive) => {
+      if (!normalizedSearchQuery) {
+        return true;
+      }
 
-    return [passive.name, passive.text].some((field) =>
-      field?.toLowerCase().includes(normalizedSearchQuery),
-    );
-  }).length;
+      return [passive.name, passive.text].some((field) =>
+        field?.toLowerCase().includes(normalizedSearchQuery),
+      );
+    }).length;
 
-  const searchedMushroomsCount = mushrooms.filter((mushroom) => {
-    if (!normalizedSearchQuery) {
-      return true;
-    }
+  const searchedMushroomsCount = mushrooms
+    .filter((mushroom) => mushroom.isChosen)
+    .filter((mushroom) => {
+      if (!normalizedSearchQuery) {
+        return true;
+      }
 
-    return [
-      mushroom.name,
-      mushroom.baseEffect,
-      mushroom.activationEffect,
-      mushroom.summonEffect,
-      mushroom.aspectEffect,
-    ].some((field) => field?.toLowerCase().includes(normalizedSearchQuery));
-  }).length;
+      return [
+        mushroom.name,
+        mushroom.baseEffect,
+        mushroom.activationEffect,
+        mushroom.summonEffect,
+        mushroom.aspectEffect,
+      ].some((field) => field?.toLowerCase().includes(normalizedSearchQuery));
+    }).length;
 
   const skillsTabCount =
     activeTab === "skills" && visibleSkillsCount !== null
