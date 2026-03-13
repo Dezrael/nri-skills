@@ -27,6 +27,7 @@ export type PassiveAbility = {
   className?: string;
   name: string; // название
   text: string; // текст описания
+  isChosen: boolean; // выбрана ли пассивка игроком
   createdAt?: string;
   updatedAt?: string;
 };
@@ -39,6 +40,7 @@ export type Mushroom = {
   activationEffect: string; // описание эффекта активации гриба (например взрыв)
   summonEffect: string; // описание того, что будет представлять из себя гриб, если призвать его как саммона
   aspectEffect: string; // описание того, что будет если грибомант решит перенять свойства гриба
+  isChosen: boolean; // выбран ли гриб игроком
   createdAt?: string;
   updatedAt?: string;
 };

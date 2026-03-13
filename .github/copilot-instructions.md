@@ -42,6 +42,7 @@ interface Passive {
   className: string;
   name: string;
   text: string;
+  isChosen: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -54,6 +55,7 @@ interface Mushroom {
   activationEffect: string;
   summonEffect: string;
   aspectEffect: string;
+  isChosen: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -286,7 +288,7 @@ Partial<
 **Body (partial):**
 
 ```typescript
-Partial<Pick<Passive, "className" | "name" | "text">>;
+Partial<Pick<Passive, "className" | "name" | "text" | "isChosen">>;
 ```
 
 **Response:** `{ data: Passive }`
@@ -307,6 +309,7 @@ Partial<
     | "activationEffect"
     | "summonEffect"
     | "aspectEffect"
+    | "isChosen"
   >
 >;
 ```

@@ -34,6 +34,7 @@ function PassivesTable({
     const newPassive: PassiveAbility = {
       name: "",
       text: "",
+      isChosen: false,
     };
     setEditingPassive(newPassive);
     setIsAdding(true);
@@ -134,7 +135,10 @@ function PassivesTable({
     setIsAdding(false);
   };
 
-  const updateEditingPassive = (field: keyof PassiveAbility, value: string) => {
+  const updateEditingPassive = (
+    field: keyof PassiveAbility,
+    value: string | boolean,
+  ) => {
     if (!editingPassive) return;
     setEditingPassive({ ...editingPassive, [field]: value });
   };
@@ -177,6 +181,19 @@ function PassivesTable({
                 onChange={(e) => updateEditingPassive("text", e.target.value)}
                 rows={4}
               />
+            </div>
+            <div className="form-field full-width checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  className="checkbox-input"
+                  checked={editingPassive.isChosen}
+                  onChange={(e) =>
+                    updateEditingPassive("isChosen", e.target.checked)
+                  }
+                />
+                Выбрано игроком
+              </label>
             </div>
           </div>
           <div className="form-actions">

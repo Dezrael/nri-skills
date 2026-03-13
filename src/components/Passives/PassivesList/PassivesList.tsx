@@ -14,6 +14,8 @@ const PassivesList: React.FC<PassivesListProps> = ({
   className,
   searchQuery = "",
 }) => {
+  const chosenPassives = passives.filter((passive) => passive.isChosen);
+
   const [pinnedIds, setPinnedIds] = useState<Set<number>>(() => {
     const stored = localStorage.getItem(`pinned-passives-${className}`);
     return stored ? new Set(JSON.parse(stored)) : new Set();
@@ -40,11 +42,11 @@ const PassivesList: React.FC<PassivesListProps> = ({
   };
 
   const filtered = searchQuery.trim()
-    ? passives.filter((p) => {
+    ? chosenPassives.filter((p) => {
         const q = searchQuery.trim().toLowerCase();
         return [p.name, p.text].some((f) => f?.toLowerCase().includes(q));
       })
-    : passives;
+    : chosenPassives;
 
   const sorted = [...filtered].sort((a, b) => {
     const aPinned = a.id ? pinnedIds.has(a.id) : false;
@@ -54,9 +56,9 @@ const PassivesList: React.FC<PassivesListProps> = ({
     return 0;
   });
 
-  if (passives.length === 0) {
+  if (chosenPassives.length === 0) {
     return (
-      <div className="passives-list empty">Нет пассивных способностей</div>
+      <div className="passives-list empty">Нет выбранных пассивных способностей</div>
     );
   }
 

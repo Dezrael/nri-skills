@@ -35,6 +35,7 @@ function MushroomsTable({
       activationEffect: "",
       summonEffect: "",
       aspectEffect: "",
+      isChosen: false,
     };
     setEditingMushroom(newMushroom);
     setIsAdding(true);
@@ -134,7 +135,10 @@ function MushroomsTable({
     setIsAdding(false);
   };
 
-  const updateEditingMushroom = (field: keyof Mushroom, value: string) => {
+  const updateEditingMushroom = (
+    field: keyof Mushroom,
+    value: string | boolean,
+  ) => {
     if (!editingMushroom) return;
     setEditingMushroom({ ...editingMushroom, [field]: value });
   };
@@ -205,6 +209,19 @@ function MushroomsTable({
                 }
                 rows={2}
               />
+            </div>
+            <div className="form-field full-width checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  className="checkbox-input"
+                  checked={editingMushroom.isChosen}
+                  onChange={(e) =>
+                    updateEditingMushroom("isChosen", e.target.checked)
+                  }
+                />
+                Выбрано игроком
+              </label>
             </div>
           </div>
           <div className="form-actions">

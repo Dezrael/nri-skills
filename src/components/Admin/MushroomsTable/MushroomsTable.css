@@ -71,7 +71,7 @@
   font-size: 0.9rem;
 }
 
-.form-field input,
+.form-field input:not([type="checkbox"]),
 .form-field textarea {
   padding: 0.5rem;
   border: 1px solid rgba(102, 126, 234, 0.3);
@@ -81,11 +81,81 @@
   font-size: 0.9rem;
 }
 
-.form-field input:focus,
+.form-field input:not([type="checkbox"]):focus,
 .form-field textarea:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.edit-form .form-grid .form-field.checkbox-group {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  white-space: nowrap;
+  padding: 0.1rem 0;
+  cursor: pointer;
+  color: #c5d4ff;
+  transition: color 0.2s ease;
+}
+
+.checkbox-label:hover {
+  color: #d8e2ff;
+}
+
+.checkbox-input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  display: inline-grid;
+  place-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  border: 2px solid #8ea2ff;
+  border-radius: 4px;
+  background: rgba(9, 14, 34, 0.75);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.checkbox-input::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.28rem;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg) scale(0);
+  transform-origin: center;
+  transition: transform 0.15s ease;
+}
+
+.checkbox-input:checked {
+  border-color: #6e83ee;
+  background: linear-gradient(135deg, #7f97ff 0%, #5a6fdc 100%);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.checkbox-input:checked::before {
+  transform: rotate(-45deg) scale(1);
+}
+
+.checkbox-input:focus-visible {
+  outline: 2px solid rgba(102, 126, 234, 0.7);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 .form-actions {

@@ -14,6 +14,8 @@ const MushroomsList: React.FC<MushroomsListProps> = ({
   className,
   searchQuery = "",
 }) => {
+  const chosenMushrooms = mushrooms.filter((mushroom) => mushroom.isChosen);
+
   const [pinnedIds, setPinnedIds] = useState<Set<number>>(() => {
     const stored = localStorage.getItem(`pinned-mushrooms-${className}`);
     return stored ? new Set(JSON.parse(stored)) : new Set();
@@ -40,7 +42,7 @@ const MushroomsList: React.FC<MushroomsListProps> = ({
   };
 
   const filtered = searchQuery.trim()
-    ? mushrooms.filter((m) => {
+    ? chosenMushrooms.filter((m) => {
         const q = searchQuery.trim().toLowerCase();
         return [
           m.name,
@@ -50,7 +52,7 @@ const MushroomsList: React.FC<MushroomsListProps> = ({
           m.aspectEffect,
         ].some((f) => f?.toLowerCase().includes(q));
       })
-    : mushrooms;
+    : chosenMushrooms;
 
   const sorted = [...filtered].sort((a, b) => {
     const aPinned = a.id ? pinnedIds.has(a.id) : false;
@@ -60,8 +62,8 @@ const MushroomsList: React.FC<MushroomsListProps> = ({
     return 0;
   });
 
-  if (mushrooms.length === 0) {
-    return <div className="mushrooms-list empty">Нет грибов</div>;
+  if (chosenMushrooms.length === 0) {
+    return <div className="mushrooms-list empty">Нет выбранных грибов</div>;
   }
 
   return (
