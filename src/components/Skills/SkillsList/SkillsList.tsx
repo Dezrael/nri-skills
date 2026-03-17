@@ -780,7 +780,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
         ) : (
           visibleSkills.map((skill) => (
             <SkillCard
-              key={`${skill.name}-${cooldownKey}`}
+              key={skill.id ?? skill.name}
               skill={skill}
               className={className}
               onSelectSkill={onSelectSkill}
@@ -788,6 +788,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
               onActionFeedback={setFeedbackMessage}
               isPinned={skill.id ? pinnedSkillIds.has(skill.id) : false}
               onTogglePin={handleTogglePin}
+              cooldownVersion={cooldownKey}
             />
           ))
         )}
