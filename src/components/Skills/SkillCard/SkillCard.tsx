@@ -52,6 +52,7 @@ const SkillCard: React.FC<SkillCardProps> = ({
   const [editMins, setEditMins] = useState(0);
   const [editChargesOpen, setEditChargesOpen] = useState(false);
   const [editChargesCurrent, setEditChargesCurrent] = useState(0);
+  const [isCardPressed, setIsCardPressed] = useState(false);
 
   useEffect(() => {
     setCooldown(getCooldown(className, skill.name));
@@ -113,6 +114,21 @@ const SkillCard: React.FC<SkillCardProps> = ({
     );
     if (next) setCharges(next);
     setEditChargesOpen(false);
+  };
+
+  const isInteractiveTarget = (target: EventTarget | null) =>
+    target instanceof Element &&
+    !!target.closest('button, input, textarea, select, a, [role="button"]');
+
+  const handleCardPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isInteractiveTarget(e.target)) {
+      return;
+    }
+    setIsCardPressed(true);
+  };
+
+  const handleCardPointerUp = () => {
+    setIsCardPressed(false);
   };
 
   const EDIT_FIELD_LABELS: Record<EditField, string> = {
@@ -235,8 +251,14 @@ const SkillCard: React.FC<SkillCardProps> = ({
   return (
     <>
       <div
-        className={`skill-card ${skill.concentration ? "concentration" : ""}`}
+        className={`skill-card ${skill.concentration ? "concentration" : ""} ${
+          isCardPressed ? "card-pressed" : ""
+        }`}
         onClick={() => onSelectSkill(skill)}
+        onPointerDown={handleCardPointerDown}
+        onPointerUp={handleCardPointerUp}
+        onPointerCancel={handleCardPointerUp}
+        onPointerLeave={handleCardPointerUp}
       >
         <div className="skill-header">
           <div className="skill-header-top">
