@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
 import "./SkillModal.css";
 
@@ -9,7 +9,26 @@ interface SkillModalProps {
 }
 
 const SkillModal: React.FC<SkillModalProps> = ({ skill, isOpen, onClose }) => {
-  if (!isOpen || !skill) {
+  const isVisible = isOpen && !!skill;
+
+  useEffect(() => {
+    if (!isVisible) {
+      return;
+    }
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [isVisible]);
+
+  if (!isVisible || !skill) {
     return null;
   }
 

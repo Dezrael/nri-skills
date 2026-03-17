@@ -9,7 +9,10 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
   animation: fadeIn 0.3s ease;
 }
 
@@ -28,8 +31,12 @@
   border-radius: 12px;
   min-width: min(350px, calc(100vw - 2rem));
   max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: calc(
+    80dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1rem
+  );
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 1rem;
   position: relative;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
@@ -122,6 +129,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.2rem;
 }
 
 .info-group {
@@ -183,12 +194,17 @@
 
 @media (max-width: 768px) {
   .modal-overlay {
-    padding: 0.5rem;
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    padding-left: max(0.5rem, env(safe-area-inset-left));
   }
 
   .modal-content {
     max-width: 100%;
-    max-height: 95vh;
+    max-height: calc(
+      80dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 0.5rem
+    );
     padding: 0.5rem;
   }
 
