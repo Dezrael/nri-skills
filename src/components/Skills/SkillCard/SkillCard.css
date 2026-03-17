@@ -324,6 +324,25 @@
   text-align: left;
 }
 
+@keyframes valuePulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  40% {
+    transform: scale(1.02);
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+.value-pulse {
+  animation: valuePulse 0.45s ease;
+}
+
 .cooldown-badge-content {
   flex: 1;
 }

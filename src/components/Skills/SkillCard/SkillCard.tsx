@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
 import {
   clearSkillCooldownField,
@@ -53,11 +53,89 @@ const SkillCard: React.FC<SkillCardProps> = ({
   const [editChargesOpen, setEditChargesOpen] = useState(false);
   const [editChargesCurrent, setEditChargesCurrent] = useState(0);
   const [isCardPressed, setIsCardPressed] = useState(false);
+  const [pulseState, setPulseState] = useState({
+    inCombatCooldown: false,
+    outCombatCooldown: false,
+    inCombatDuration: false,
+    outCombatDuration: false,
+    charges: false,
+  });
+  const prevValuesRef = useRef<{
+    inCombatCooldown: number;
+    outCombatCooldown: number;
+    inCombatDuration: number;
+    outCombatDuration: number;
+    chargesCurrent: number;
+  } | null>(null);
 
   useEffect(() => {
     setCooldown(getCooldown(className, skill.name));
     setCharges(getSkillCharges(className, skill.name, skill.outCombatCharges));
   }, [className, skill.name, skill.outCombatCharges, cooldownVersion]);
+
+  useEffect(() => {
+    const nextValues = {
+      inCombatCooldown: cooldown?.inCombatTurns ?? 0,
+      outCombatCooldown: cooldown?.outCombatMinutes ?? 0,
+      inCombatDuration: cooldown?.durationInCombatTurns ?? 0,
+      outCombatDuration: cooldown?.durationOutCombatMinutes ?? 0,
+      chargesCurrent: charges?.current ?? 0,
+    };
+
+    if (!prevValuesRef.current) {
+      prevValuesRef.current = nextValues;
+      return;
+    }
+
+    const changed = {
+      inCombatCooldown:
+        prevValuesRef.current.inCombatCooldown !== nextValues.inCombatCooldown,
+      outCombatCooldown:
+        prevValuesRef.current.outCombatCooldown !==
+        nextValues.outCombatCooldown,
+      inCombatDuration:
+        prevValuesRef.current.inCombatDuration !== nextValues.inCombatDuration,
+      outCombatDuration:
+        prevValuesRef.current.outCombatDuration !==
+        nextValues.outCombatDuration,
+      charges:
+        prevValuesRef.current.chargesCurrent !== nextValues.chargesCurrent,
+    };
+
+    prevValuesRef.current = nextValues;
+
+    if (!Object.values(changed).some(Boolean)) {
+      return;
+    }
+
+    setPulseState((prev) => ({
+      ...prev,
+      ...changed,
+    }));
+
+    const timeoutId = window.setTimeout(() => {
+      setPulseState((prev) => ({
+        ...prev,
+        inCombatCooldown: changed.inCombatCooldown
+          ? false
+          : prev.inCombatCooldown,
+        outCombatCooldown: changed.outCombatCooldown
+          ? false
+          : prev.outCombatCooldown,
+        inCombatDuration: changed.inCombatDuration
+          ? false
+          : prev.inCombatDuration,
+        outCombatDuration: changed.outCombatDuration
+          ? false
+          : prev.outCombatDuration,
+        charges: changed.charges ? false : prev.charges,
+      }));
+    }, 450);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [charges, cooldown]);
 
   useEffect(() => {
     if (!editField && !editChargesOpen) return;
@@ -345,7 +423,9 @@ const SkillCard: React.FC<SkillCardProps> = ({
             {hasChargeLimit && charges ? (
               <button
                 type="button"
-                className={`value charges-value cooldown-badge-btn`}
+                className={`value charges-value cooldown-badge-btn ${
+                  pulseState.charges ? "value-pulse" : ""
+                }`}
                 onClick={openEditCharges}
                 aria-label="Изменить количество зарядов"
               >
@@ -358,7 +438,9 @@ const SkillCard: React.FC<SkillCardProps> = ({
               </button>
             ) : (
               <span
-                className={`value ${hasChargeLimit ? "charges-value" : ""}`}
+                className={`value ${hasChargeLimit ? "charges-value" : ""} ${
+                  pulseState.charges ? "value-pulse" : ""
+                }`}
               >
                 <span>{chargesDisplay}</span>
                 {hasChargeLimit && cooldownTypeDisplay && (
@@ -379,7 +461,11 @@ const SkillCard: React.FC<SkillCardProps> = ({
           {(hasActiveDuration || isOnCooldown) && (
             <div className="active-cooldown">
               {combatDurationActive && (
-                <div className="cooldown-badge duration combat">
+                <div
+                  className={`cooldown-badge duration combat ${
+                    pulseState.inCombatDuration ? "value-pulse" : ""
+                  }`}
+                >
                   <button
                     type="button"
                     className="cooldown-badge-content cooldown-badge-btn"
@@ -419,7 +505,11 @@ const SkillCard: React.FC<SkillCardProps> = ({
                 </div>
               )}
               {outCombatDurationActive && (
-                <div className="cooldown-badge duration out-combat">
+                <div
+                  className={`cooldown-badge duration out-combat ${
+                    pulseState.outCombatDuration ? "value-pulse" : ""
+                  }`}
+                >
                   <button
                     type="button"
                     className="cooldown-badge-content cooldown-badge-btn"
@@ -457,7 +547,11 @@ const SkillCard: React.FC<SkillCardProps> = ({
                 </div>
               )}
               {combatCooldownActive && (
-                <div className="cooldown-badge combat">
+                <div
+                  className={`cooldown-badge combat ${
+                    pulseState.inCombatCooldown ? "value-pulse" : ""
+                  }`}
+                >
                   <button
                     type="button"
                     className="cooldown-badge-content cooldown-badge-btn"
@@ -497,7 +591,11 @@ const SkillCard: React.FC<SkillCardProps> = ({
                 </div>
               )}
               {outCombatCooldownActive && (
-                <div className="cooldown-badge out-combat">
+                <div
+                  className={`cooldown-badge out-combat ${
+                    pulseState.outCombatCooldown ? "value-pulse" : ""
+                  }`}
+                >
                   <button
                     type="button"
                     className="cooldown-badge-content cooldown-badge-btn"
