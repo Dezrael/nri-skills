@@ -251,13 +251,31 @@
 
 @media (max-width: 768px) {
   .time-adjust-body {
-    padding: 1rem 1rem 0.85rem;
+    padding: 0.95rem 0.9rem 0.8rem;
   }
 
   .time-adjust-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+    display: flex;
+    gap: 0.45rem;
+  }
+
+  .time-adjust-unit {
+    border-radius: 10px;
+  }
+
+  .time-adjust-step-btn {
+    padding: 0.42rem 0;
+    font-size: 1rem;
+  }
+
+  .time-adjust-input {
+    font-size: 1.32rem;
+    padding: 0.08rem 0.15rem;
+  }
+
+  .time-adjust-label {
+    font-size: 0.62rem;
+    padding-bottom: 0.2rem;
   }
 
   .time-adjust-footer {
