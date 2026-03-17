@@ -11,6 +11,7 @@ import {
   playerUseSkillOutOfCombat,
   minutesToTimeString,
 } from "../../../utils/cooldownManager";
+import { lockBodyScroll, unlockBodyScroll } from "../../../utils/scrollLock";
 import TimeAdjustModal from "../TimeAdjustModal/TimeAdjustModal";
 import "./SkillCard.css";
 
@@ -140,10 +141,9 @@ const SkillCard: React.FC<SkillCardProps> = ({
 
   useEffect(() => {
     if (!editField && !editChargesOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
     return () => {
-      document.body.style.overflow = prev;
+      unlockBodyScroll();
     };
   }, [editField, editChargesOpen]);
 
@@ -174,6 +174,11 @@ const SkillCard: React.FC<SkillCardProps> = ({
       : editDays * 24 * 60 + editHours * 60 + editMins;
     setSkillCooldownField(className, skill.name, editField, value);
     setCooldown(getCooldown(className, skill.name));
+    onActionFeedback?.(
+      (editField === "inCombatTurns" || editField === "outCombatMinutes"
+        ? "Изменена перезарядка"
+        : "Изменена длительность") + `: ${skill.name}`,
+    );
     setEditField(null);
   };
 
@@ -191,7 +196,12 @@ const SkillCard: React.FC<SkillCardProps> = ({
       skill.outCombatCharges,
       editChargesCurrent,
     );
-    if (next) setCharges(next);
+    if (next) {
+      setCharges(next);
+      onActionFeedback?.(
+        `Изменены заряды: ${skill.name} (${next.current}/${next.max})`,
+      );
+    }
     setEditChargesOpen(false);
   };
 
@@ -301,8 +311,8 @@ const SkillCard: React.FC<SkillCardProps> = ({
       onCooldownChange?.();
       onActionFeedback?.(
         field === "inCombatTurns" || field === "outCombatMinutes"
-          ? "Перезарядка сброшена"
-          : "Длительность сброшена",
+          ? `Перезарядка сброшена: ${skill.name}`
+          : `Длительность сброшена: ${skill.name}`,
       );
     };
 

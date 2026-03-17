@@ -165,6 +165,31 @@
   line-height: 1;
 }
 
+.battle-log-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(168, 85, 247, 0.42);
+  background: rgba(168, 85, 247, 0.16);
+  color: #e9d5ff;
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.battle-log-toggle:hover {
+  background: rgba(168, 85, 247, 0.24);
+  border-color: rgba(168, 85, 247, 0.58);
+}
+
+.battle-log-toggle .material-symbols-rounded {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .skills-list-container.combat-mode .skill-card {
   padding: 0.8rem;
 }
@@ -213,6 +238,11 @@
 @media (max-width: 500px) {
   .combat-mode-toggle {
     margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .battle-log-toggle {
     width: 100%;
     justify-content: center;
   }
@@ -462,6 +492,19 @@
   .icon-only-time-btn {
     min-width: 2.9rem;
   }
+
+  .battle-log-modal {
+    max-height: 82vh;
+  }
+
+  .battle-log-body {
+    padding: 0.7rem 0.8rem 0.85rem;
+  }
+
+  .battle-log-item {
+    gap: 0.55rem;
+    padding: 0.45rem 0.55rem;
+  }
 }
 
 @media (max-width: 500px) {
@@ -609,4 +652,128 @@
   background: rgba(16, 185, 129, 0.3);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.battle-log-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.battle-log-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: min(80vh, 700px);
+  background: #1e1e2e;
+  border: 1px solid rgba(102, 126, 234, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.battle-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem 0.7rem;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.battle-log-header h3 {
+  margin: 0;
+  color: #a0b6ff;
+  font-size: 1rem;
+}
+
+.battle-log-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.battle-log-clear-btn {
+  border: 1px solid rgba(220, 80, 80, 0.42);
+  background: rgba(220, 80, 80, 0.1);
+  color: #fca5a5;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+}
+
+.battle-log-clear-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.battle-log-close-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #a0b6ff;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.battle-log-close-btn:hover {
+  opacity: 1;
+  background: rgba(102, 126, 234, 0.15);
+}
+
+.battle-log-close-btn .material-symbols-rounded {
+  font-size: 1.2rem;
+}
+
+.battle-log-body {
+  padding: 0.8rem 1rem 1rem;
+  overflow: auto;
+}
+
+.battle-log-empty {
+  color: rgba(200, 200, 220, 0.7);
+  font-size: 0.9rem;
+  padding: 0.6rem 0.2rem;
+}
+
+.battle-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.battle-log-item {
+  display: flex;
+  gap: 0.7rem;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+}
+
+.battle-log-time {
+  flex: 0 0 auto;
+  color: #94a3d6;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.battle-log-text {
+  color: #e2e8ff;
+  font-size: 0.86rem;
+  line-height: 1.35;
 }

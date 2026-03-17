@@ -8,6 +8,7 @@ import {
   skipTurn,
   skipTime,
 } from "../../../utils/cooldownManager";
+import { lockBodyScroll, unlockBodyScroll } from "../../../utils/scrollLock";
 import Tabs from "../../Tabs/Tabs";
 import TimeAdjustModal from "../TimeAdjustModal/TimeAdjustModal";
 import "./SkillsList.css";
@@ -24,6 +25,12 @@ interface SkillsListProps {
 type SkillFilterKey = "ready" | "cooldown" | "noCharges" | "pinned";
 type SkillSortMode = "pinned" | "ready" | "actionType";
 
+interface BattleLogEntry {
+  id: string;
+  timestamp: number;
+  message: string;
+}
+
 const FILTER_LABELS: Record<SkillFilterKey, string> = {
   ready: "Готово",
   cooldown: "На кд",
@@ -39,6 +46,8 @@ const SORT_LABELS: Record<SkillSortMode, string> = {
 
 const SORT_OPTIONS: SkillSortMode[] = ["pinned", "ready", "actionType"];
 const COMBAT_MODE_STORAGE_KEY_PREFIX = "combat-mode";
+const BATTLE_LOG_STORAGE_KEY_PREFIX = "battle-log";
+const MAX_BATTLE_LOG_ENTRIES = 80;
 
 const SkillsList: React.FC<SkillsListProps> = ({
   skills,
@@ -105,6 +114,18 @@ const SkillsList: React.FC<SkillsListProps> = ({
     return stored === "true";
   });
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [showBattleLogModal, setShowBattleLogModal] = useState(false);
+  const [battleLog, setBattleLog] = useState<BattleLogEntry[]>(() => {
+    const key = `${BATTLE_LOG_STORAGE_KEY_PREFIX}-${className}`;
+    const stored = localStorage.getItem(key);
+    if (!stored) return [];
+    try {
+      const parsed = JSON.parse(stored) as BattleLogEntry[];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
   const [activeFilters, setActiveFilters] = useState<Set<SkillFilterKey>>(
     () => new Set(),
   );
@@ -159,7 +180,28 @@ const SkillsList: React.FC<SkillsListProps> = ({
       `${COMBAT_MODE_STORAGE_KEY_PREFIX}-${className}`,
     );
     setIsCombatMode(storedCombatMode === "true");
+
+    const storedBattleLog = localStorage.getItem(
+      `${BATTLE_LOG_STORAGE_KEY_PREFIX}-${className}`,
+    );
+    if (!storedBattleLog) {
+      setBattleLog([]);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(storedBattleLog) as BattleLogEntry[];
+      setBattleLog(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setBattleLog([]);
+    }
   }, [className]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      `${BATTLE_LOG_STORAGE_KEY_PREFIX}-${className}`,
+      JSON.stringify(battleLog),
+    );
+  }, [battleLog, className]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -179,6 +221,18 @@ const SkillsList: React.FC<SkillsListProps> = ({
 
     return () => window.clearTimeout(timeoutId);
   }, [feedbackMessage]);
+
+  useEffect(() => {
+    if (!showTimeModal && !showBattleLogModal) {
+      return;
+    }
+
+    lockBodyScroll();
+
+    return () => {
+      unlockBodyScroll();
+    };
+  }, [showTimeModal, showBattleLogModal]);
 
   const handleToggleFilter = (filterKey: SkillFilterKey) => {
     setActiveFilters((prev) => {
@@ -313,11 +367,34 @@ const SkillsList: React.FC<SkillsListProps> = ({
     onVisibleCountChange?.(visibleSkills.length);
   }, [onVisibleCountChange, visibleSkills.length]);
 
+  const appendBattleLog = (message: string) => {
+    const trimmed = message.trim();
+    if (!trimmed) return;
+    const next: BattleLogEntry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: Date.now(),
+      message: trimmed,
+    };
+    setBattleLog((prev) => [next, ...prev].slice(0, MAX_BATTLE_LOG_ENTRIES));
+  };
+
+  const pushActionFeedback = (message: string) => {
+    setFeedbackMessage(message);
+    appendBattleLog(message);
+  };
+
+  const formatBattleLogTime = (timestamp: number) =>
+    new Date(timestamp).toLocaleTimeString("ru-RU", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+
   const handleSkipTurn = () => {
     setPendingRestType(null);
     skipTurn();
     setCooldownKey((prev) => prev + 1); // Trigger re-render
-    setFeedbackMessage("Пропущен 1 ход");
+    pushActionFeedback("Пропущен 1 ход");
   };
 
   const restoreShortRestCharges = () => {
@@ -393,7 +470,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
     setPendingRestType(null);
     setCooldownKey((prev) => prev + 1);
     if (feedback) {
-      setFeedbackMessage(feedback);
+      pushActionFeedback(feedback);
     }
   };
 
@@ -430,7 +507,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
       skipTime(parts.join(" "));
       setCooldownKey((prev) => prev + 1); // Trigger re-render
       handleCloseTimeModal();
-      setFeedbackMessage(`Прошло: ${parts.join(" ")}`);
+      pushActionFeedback(`Прошло: ${parts.join(" ")}`);
     }
   };
 
@@ -494,6 +571,21 @@ const SkillsList: React.FC<SkillsListProps> = ({
             swords
           </span>
           {isCombatMode ? "Боевой режим: ON" : "Боевой режим"}
+        </button>
+        <button
+          type="button"
+          className="battle-log-toggle"
+          onClick={() => {
+            setPendingRestType(null);
+            setShowBattleLogModal(true);
+          }}
+          title="Лог боя"
+          aria-label="Лог боя"
+        >
+          <span className="material-symbols-rounded" aria-hidden="true">
+            history
+          </span>
+          Лог боя
         </button>
       </div>
 
@@ -650,6 +742,59 @@ const SkillsList: React.FC<SkillsListProps> = ({
         />
       )}
 
+      {showBattleLogModal && (
+        <div
+          className="battle-log-overlay"
+          onClick={() => setShowBattleLogModal(false)}
+        >
+          <div
+            className="battle-log-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="battle-log-header">
+              <h3>Лог боя</h3>
+              <div className="battle-log-header-actions">
+                <button
+                  type="button"
+                  className="battle-log-clear-btn"
+                  onClick={() => setBattleLog([])}
+                  disabled={battleLog.length === 0}
+                >
+                  Очистить
+                </button>
+                <button
+                  type="button"
+                  className="battle-log-close-btn"
+                  onClick={() => setShowBattleLogModal(false)}
+                  aria-label="Закрыть лог"
+                >
+                  <span className="material-symbols-rounded" aria-hidden="true">
+                    close
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div className="battle-log-body">
+              {battleLog.length === 0 ? (
+                <div className="battle-log-empty">Записей пока нет</div>
+              ) : (
+                <ul className="battle-log-list">
+                  {battleLog.map((entry) => (
+                    <li key={entry.id} className="battle-log-item">
+                      <span className="battle-log-time">
+                        {formatBattleLogTime(entry.timestamp)}
+                      </span>
+                      <span className="battle-log-text">{entry.message}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="skills-list">
         {visibleSkills.length === 0 ? (
           <div className="skills-list empty">Ничего не найдено</div>
@@ -661,7 +806,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
               className={className}
               onSelectSkill={onSelectSkill}
               onCooldownChange={() => setCooldownKey((prev) => prev + 1)}
-              onActionFeedback={setFeedbackMessage}
+              onActionFeedback={pushActionFeedback}
               isPinned={skill.id ? pinnedSkillIds.has(skill.id) : false}
               onTogglePin={handleTogglePin}
               cooldownVersion={cooldownKey}
