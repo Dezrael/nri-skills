@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PlayerSkill } from "../../../types/PlayerSkill";
+import { evaluateDiceExpression } from "../../../utils/cooldownManager";
 import {
   createSkill,
   deleteSkill,
@@ -7,6 +8,24 @@ import {
   updateSkill,
 } from "../../../api/nriApi";
 import "./SkillsTable.css";
+
+const validateTurnsFormula = (value: string): string => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === "-" || trimmed === "∞") return "";
+  return evaluateDiceExpression(trimmed, { rollDice: false }) !== null
+    ? ""
+    : "Неверный формат. Пример: 3, 2d6, 1+d4";
+};
+
+const validateTimeFormula = (value: string): string => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === "-" || trimmed === "∞") return "";
+  if (evaluateDiceExpression(trimmed, { rollDice: false }) !== null) return "";
+  const timeUnitPattern =
+    /[0-9dD+\-*/().]+\s*(день|дня|дней|days?|час|часа|часов|hours?|минута|минуты|минут|minutes?)/i;
+  if (timeUnitPattern.test(trimmed)) return "";
+  return "Неверный формат. Пример: 2d6, 10+2d4, 2 часа, 1d4 часов 30 минут";
+};
 
 interface SkillsTableProps {
   authToken: string;
@@ -16,101 +35,6 @@ interface SkillsTableProps {
   skills: PlayerSkill[];
   onUpdate: (skills: PlayerSkill[]) => void;
 }
-
-type OutCombatParts = {
-  days: string;
-  hours: string;
-  minutes: string;
-};
-
-const pluralizeRu = (
-  value: number,
-  one: string,
-  few: string,
-  many: string,
-): string => {
-  const mod100 = value % 100;
-  const mod10 = value % 10;
-
-  if (mod100 >= 11 && mod100 <= 14) {
-    return many;
-  }
-
-  if (mod10 === 1) {
-    return one;
-  }
-
-  if (mod10 >= 2 && mod10 <= 4) {
-    return few;
-  }
-
-  return many;
-};
-
-const parseOutCombatCooldown = (value: string): OutCombatParts => {
-  const parts: OutCombatParts = {
-    days: "",
-    hours: "",
-    minutes: "",
-  };
-
-  const matches = Array.from(
-    value.matchAll(
-      /(\d+)\s*(день|дня|дней|час|часа|часов|минута|минуты|минут|day|days|hour|hours|minute|minutes)/gi,
-    ),
-  );
-
-  for (const match of matches) {
-    const amount = match[1];
-    const unit = match[2].toLowerCase();
-
-    if (["день", "дня", "дней", "day", "days"].includes(unit)) {
-      parts.days = amount;
-    }
-
-    if (["час", "часа", "часов", "hour", "hours"].includes(unit)) {
-      parts.hours = amount;
-    }
-
-    if (["минута", "минуты", "минут", "minute", "minutes"].includes(unit)) {
-      parts.minutes = amount;
-    }
-  }
-
-  return parts;
-};
-
-const formatOutCombatCooldown = ({
-  days,
-  hours,
-  minutes,
-}: OutCombatParts): string => {
-  const daysNumber = Number(days) || 0;
-  const hoursNumber = Number(hours) || 0;
-  const minutesNumber = Number(minutes) || 0;
-
-  const resultParts: string[] = [];
-
-  if (daysNumber > 0) {
-    resultParts.push(
-      `${daysNumber} ${pluralizeRu(daysNumber, "день", "дня", "дней")}`,
-    );
-  }
-
-  if (hoursNumber > 0) {
-    resultParts.push(
-      `${hoursNumber} ${pluralizeRu(hoursNumber, "час", "часа", "часов")}`,
-    );
-  }
-
-  if (minutesNumber > 0) {
-    resultParts.push(
-      `${minutesNumber} ${pluralizeRu(minutesNumber, "минута", "минуты", "минут")}`,
-    );
-  }
-
-  return resultParts.join(" ");
-};
 
 function SkillsTable({
   authToken,
@@ -122,17 +46,9 @@ function SkillsTable({
 }: SkillsTableProps) {
   const [editingSkill, setEditingSkill] = useState<PlayerSkill | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [outCombatParts, setOutCombatParts] = useState<OutCombatParts>({
-    days: "",
-    hours: "",
-    minutes: "",
-  });
-  const [durationOutOfCombatParts, setDurationOutOfCombatParts] =
-    useState<OutCombatParts>({
-      days: "",
-      hours: "",
-      minutes: "",
-    });
+  const [formulaErrors, setFormulaErrors] = useState<Record<string, string>>(
+    {},
+  );
 
   const handleAdd = () => {
     const newSkill: PlayerSkill = {
@@ -155,18 +71,14 @@ function SkillsTable({
       isChosen: false,
     };
     setEditingSkill(newSkill);
-    setOutCombatParts({ days: "", hours: "", minutes: "" });
-    setDurationOutOfCombatParts({ days: "", hours: "", minutes: "" });
     setIsAdding(true);
+    setFormulaErrors({});
   };
 
   const handleEdit = (skill: PlayerSkill) => {
     setEditingSkill({ ...skill });
-    setOutCombatParts(parseOutCombatCooldown(skill.outCombatCooldown || ""));
-    setDurationOutOfCombatParts(
-      parseOutCombatCooldown(skill.durationOutOfCombat || ""),
-    );
     setIsAdding(false);
+    setFormulaErrors({});
   };
 
   const handleDelete = async (index: number) => {
@@ -197,15 +109,15 @@ function SkillsTable({
   const handleSave = async () => {
     if (!editingSkill) return;
 
-    const outCombatCooldown = formatOutCombatCooldown(outCombatParts);
-    const durationOutOfCombat = formatOutCombatCooldown(
-      durationOutOfCombatParts,
-    );
+    const activeFormulaErrors = Object.values(formulaErrors).filter(Boolean);
+    if (activeFormulaErrors.length > 0) {
+      onNotify("error", "Исправьте ошибки в полях формул перед сохранением");
+      return;
+    }
+
     const hasCharges = (Number(editingSkill.outCombatCharges) || 0) > 0;
     const skillToSave: PlayerSkill = {
       ...editingSkill,
-      outCombatCooldown,
-      durationOutOfCombat,
       cooldownType: hasCharges ? editingSkill.cooldownType || "" : "",
     };
 
@@ -266,6 +178,7 @@ function SkillsTable({
 
       setEditingSkill(null);
       setIsAdding(false);
+      setFormulaErrors({});
     } catch (err) {
       if (isUnauthorizedError(err)) {
         onAuthExpired();
@@ -282,9 +195,8 @@ function SkillsTable({
 
   const handleCancel = () => {
     setEditingSkill(null);
-    setOutCombatParts({ days: "", hours: "", minutes: "" });
-    setDurationOutOfCombatParts({ days: "", hours: "", minutes: "" });
     setIsAdding(false);
+    setFormulaErrors({});
   };
 
   const updateEditingSkill = (field: keyof PlayerSkill, value: any) => {
@@ -301,17 +213,6 @@ function SkillsTable({
     }
 
     setEditingSkill({ ...editingSkill, [field]: value });
-  };
-
-  const updateOutCombatPart = (field: keyof OutCombatParts, value: string) => {
-    if (value && !/^\d+$/.test(value)) {
-      return;
-    }
-
-    setOutCombatParts((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
   };
 
   return (
@@ -389,127 +290,87 @@ function SkillsTable({
               <label>Длительность в бою:</label>
               <input
                 type="text"
-                inputMode="numeric"
-                placeholder="0"
                 value={editingSkill.durationInCombat}
+                className={formulaErrors.durationInCombat ? "input-error" : ""}
                 onChange={(e) => {
-                  if (!e.target.value || /^\d+$/.test(e.target.value))
-                    updateEditingSkill("durationInCombat", e.target.value);
+                  const val = e.target.value;
+                  updateEditingSkill("durationInCombat", val);
+                  setFormulaErrors((prev) => ({
+                    ...prev,
+                    durationInCombat: validateTurnsFormula(val),
+                  }));
                 }}
               />
+              {formulaErrors.durationInCombat && (
+                <span className="formula-error">
+                  {formulaErrors.durationInCombat}
+                </span>
+              )}
             </div>
             <div className="form-field">
               <label>КД в бою:</label>
               <input
                 type="text"
-                inputMode="numeric"
-                placeholder="0"
                 value={editingSkill.inCombatCooldown}
+                className={formulaErrors.inCombatCooldown ? "input-error" : ""}
                 onChange={(e) => {
-                  if (!e.target.value || /^\d+$/.test(e.target.value))
-                    updateEditingSkill("inCombatCooldown", e.target.value);
+                  const val = e.target.value;
+                  updateEditingSkill("inCombatCooldown", val);
+                  setFormulaErrors((prev) => ({
+                    ...prev,
+                    inCombatCooldown: validateTurnsFormula(val),
+                  }));
                 }}
               />
+              {formulaErrors.inCombatCooldown && (
+                <span className="formula-error">
+                  {formulaErrors.inCombatCooldown}
+                </span>
+              )}
             </div>
-            <div className="form-field full-width">
+            <div className="form-field">
               <label>Длительность вне боя:</label>
-              <div className="time-parts-grid">
-                <div className="time-part-field">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={durationOutOfCombatParts.days}
-                    onChange={(e) =>
-                      setDurationOutOfCombatParts((prev) => ({
-                        ...prev,
-                        days:
-                          !e.target.value || /^\d+$/.test(e.target.value)
-                            ? e.target.value
-                            : prev.days,
-                      }))
-                    }
-                    placeholder="0"
-                  />
-                  <span>дней</span>
-                </div>
-                <div className="time-part-field">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={durationOutOfCombatParts.hours}
-                    onChange={(e) =>
-                      setDurationOutOfCombatParts((prev) => ({
-                        ...prev,
-                        hours:
-                          !e.target.value || /^\d+$/.test(e.target.value)
-                            ? e.target.value
-                            : prev.hours,
-                      }))
-                    }
-                    placeholder="0"
-                  />
-                  <span>часов</span>
-                </div>
-                <div className="time-part-field">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={durationOutOfCombatParts.minutes}
-                    onChange={(e) =>
-                      setDurationOutOfCombatParts((prev) => ({
-                        ...prev,
-                        minutes:
-                          !e.target.value || /^\d+$/.test(e.target.value)
-                            ? e.target.value
-                            : prev.minutes,
-                      }))
-                    }
-                    placeholder="0"
-                  />
-                  <span>минут</span>
-                </div>
-              </div>
+              <input
+                type="text"
+                value={editingSkill.durationOutOfCombat}
+                className={
+                  formulaErrors.durationOutOfCombat ? "input-error" : ""
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateEditingSkill("durationOutOfCombat", val);
+                  setFormulaErrors((prev) => ({
+                    ...prev,
+                    durationOutOfCombat: validateTimeFormula(val),
+                  }));
+                }}
+              />
+              {formulaErrors.durationOutOfCombat && (
+                <span className="formula-error">
+                  {formulaErrors.durationOutOfCombat}
+                </span>
+              )}
             </div>
-            <div className="form-field full-width">
+            <div className="form-field">
               <label>КД вне боя:</label>
-              <div className="time-parts-grid">
-                <div className="time-part-field">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={outCombatParts.days}
-                    onChange={(e) =>
-                      updateOutCombatPart("days", e.target.value)
-                    }
-                    placeholder="0"
-                  />
-                  <span>дней</span>
-                </div>
-                <div className="time-part-field">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={outCombatParts.hours}
-                    onChange={(e) =>
-                      updateOutCombatPart("hours", e.target.value)
-                    }
-                    placeholder="0"
-                  />
-                  <span>часов</span>
-                </div>
-                <div className="time-part-field">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={outCombatParts.minutes}
-                    onChange={(e) =>
-                      updateOutCombatPart("minutes", e.target.value)
-                    }
-                    placeholder="0"
-                  />
-                  <span>минут</span>
-                </div>
-              </div>
+              <input
+                type="text"
+                value={editingSkill.outCombatCooldown}
+                className={formulaErrors.outCombatCooldown ? "input-error" : ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateEditingSkill("outCombatCooldown", val);
+                  setFormulaErrors((prev) => ({
+                    ...prev,
+                    outCombatCooldown: validateTimeFormula(val),
+                  }));
+                }}
+              />
+              {formulaErrors.outCombatCooldown && (
+                <span className="formula-error">
+                  {formulaErrors.outCombatCooldown}
+                </span>
+              )}
             </div>
             <div className="form-field">
               <label>Заряды:</label>

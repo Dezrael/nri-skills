@@ -33,6 +33,210 @@ const saveStoredRecord = <T>(storageKey: string, data: Record<string, T>) => {
   localStorage.setItem(storageKey, JSON.stringify(data));
 };
 
+type DiceEvalOptions = {
+  rollDice?: boolean;
+};
+
+type ParserState = {
+  expression: string;
+  index: number;
+  rollDice: boolean;
+};
+
+const rollDie = (sides: number): number =>
+  Math.floor(Math.random() * sides) + 1;
+
+const skipSpaces = (state: ParserState) => {
+  while (state.index < state.expression.length) {
+    const char = state.expression[state.index];
+    if (char !== " " && char !== "\t" && char !== "\n") {
+      break;
+    }
+    state.index += 1;
+  }
+};
+
+const parseNumber = (state: ParserState): number | null => {
+  skipSpaces(state);
+  const start = state.index;
+
+  while (state.index < state.expression.length) {
+    const char = state.expression[state.index];
+    if (char < "0" || char > "9") {
+      break;
+    }
+    state.index += 1;
+  }
+
+  if (start === state.index) {
+    return null;
+  }
+
+  return Number.parseInt(state.expression.slice(start, state.index), 10);
+};
+
+const parseFactor = (state: ParserState): number | null => {
+  skipSpaces(state);
+  if (state.index >= state.expression.length) {
+    return null;
+  }
+
+  const char = state.expression[state.index];
+
+  if (char === "+") {
+    state.index += 1;
+    return parseFactor(state);
+  }
+
+  if (char === "-") {
+    state.index += 1;
+    const value = parseFactor(state);
+    return value === null ? null : -value;
+  }
+
+  if (char === "(") {
+    state.index += 1;
+    const value = parseExpressionInternal(state);
+    skipSpaces(state);
+    if (value === null || state.expression[state.index] !== ")") {
+      return null;
+    }
+    state.index += 1;
+    return value;
+  }
+
+  if (char === "d" || char === "D") {
+    state.index += 1;
+    const sides = parseNumber(state);
+    if (!sides || sides <= 0) {
+      return null;
+    }
+    return state.rollDice ? rollDie(sides) : (1 + sides) / 2;
+  }
+
+  const firstNumber = parseNumber(state);
+  if (firstNumber === null) {
+    return null;
+  }
+
+  skipSpaces(state);
+  const maybeDice = state.expression[state.index];
+  if (maybeDice === "d" || maybeDice === "D") {
+    state.index += 1;
+    const sides = parseNumber(state);
+    if (!sides || sides <= 0 || firstNumber <= 0) {
+      return null;
+    }
+
+    let total = 0;
+    for (let i = 0; i < firstNumber; i += 1) {
+      total += state.rollDice ? rollDie(sides) : (1 + sides) / 2;
+    }
+    return total;
+  }
+
+  return firstNumber;
+};
+
+const parseTerm = (state: ParserState): number | null => {
+  let left = parseFactor(state);
+  if (left === null) {
+    return null;
+  }
+
+  while (true) {
+    skipSpaces(state);
+    const operator = state.expression[state.index];
+    if (operator !== "*" && operator !== "/") {
+      break;
+    }
+
+    state.index += 1;
+    const right = parseFactor(state);
+    if (right === null) {
+      return null;
+    }
+
+    if (operator === "*") {
+      left *= right;
+    } else {
+      if (right === 0) {
+        return null;
+      }
+      left /= right;
+    }
+  }
+
+  return left;
+};
+
+const parseExpressionInternal = (state: ParserState): number | null => {
+  let left = parseTerm(state);
+  if (left === null) {
+    return null;
+  }
+
+  while (true) {
+    skipSpaces(state);
+    const operator = state.expression[state.index];
+    if (operator !== "+" && operator !== "-") {
+      break;
+    }
+
+    state.index += 1;
+    const right = parseTerm(state);
+    if (right === null) {
+      return null;
+    }
+
+    if (operator === "+") {
+      left += right;
+    } else {
+      left -= right;
+    }
+  }
+
+  return left;
+};
+
+export const evaluateDiceExpression = (
+  expression: string,
+  options: DiceEvalOptions = {},
+): number | null => {
+  const trimmed = expression.trim();
+  if (!trimmed) {
+    return 0;
+  }
+
+  const state: ParserState = {
+    expression: trimmed,
+    index: 0,
+    rollDice: options.rollDice !== false,
+  };
+
+  const value = parseExpressionInternal(state);
+  if (value === null) {
+    return null;
+  }
+
+  skipSpaces(state);
+  if (state.index !== state.expression.length) {
+    return null;
+  }
+
+  return value;
+};
+
+const toNonNegativeInt = (value: number | null): number => {
+  if (value === null || !Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.floor(value));
+};
+
+const evaluateTurns = (expression: string, rollDice = true): number =>
+  toNonNegativeInt(evaluateDiceExpression(expression, { rollDice }));
+
 const parseMaxCharges = (charges: string): number | null => {
   const parsed = Number.parseInt(charges, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
@@ -227,23 +431,39 @@ export const clearSkillCooldownField = (
 export const timeStringToMinutes = (timeStr: string): number => {
   if (!timeStr || timeStr === "-" || timeStr === "∞") return 0;
 
-  const hoursMatch = timeStr.match(/(\d+)\s*(час|часа|часов|hours?)/i);
-  const minutesMatch = timeStr.match(/(\d+)\s*(минута|минуты|минут|minutes?)/i);
-  const daysMatch = timeStr.match(/(\d+)\s*(день|дня|дней|days?)/i);
+  const dayMatches = Array.from(
+    timeStr.matchAll(/([0-9dD+\-*/().]+)\s*(день|дня|дней|days?)/gi),
+  );
+  const hourMatches = Array.from(
+    timeStr.matchAll(/([0-9dD+\-*/().]+)\s*(час|часа|часов|hours?)/gi),
+  );
+  const minuteMatches = Array.from(
+    timeStr.matchAll(/([0-9dD+\-*/().]+)\s*(минута|минуты|минут|minutes?)/gi),
+  );
 
   let totalMinutes = 0;
 
-  if (daysMatch) {
-    totalMinutes += parseInt(daysMatch[1]) * 24 * 60;
-  }
-  if (hoursMatch) {
-    totalMinutes += parseInt(hoursMatch[1]) * 60;
-  }
-  if (minutesMatch) {
-    totalMinutes += parseInt(minutesMatch[1]);
+  if (
+    dayMatches.length > 0 ||
+    hourMatches.length > 0 ||
+    minuteMatches.length > 0
+  ) {
+    dayMatches.forEach((match) => {
+      totalMinutes += evaluateTurns(match[1]) * 24 * 60;
+    });
+
+    hourMatches.forEach((match) => {
+      totalMinutes += evaluateTurns(match[1]) * 60;
+    });
+
+    minuteMatches.forEach((match) => {
+      totalMinutes += evaluateTurns(match[1]);
+    });
+
+    return totalMinutes;
   }
 
-  return totalMinutes;
+  return evaluateTurns(timeStr);
 };
 
 // Конвертировать минуты обратно в строку времени
@@ -282,14 +502,12 @@ export const playerUseSkillInCombat = (
   inCombatDurationTurns: string,
   outCombatDuration: string,
 ) => {
-  const inCombatTurns = Number.parseInt(inCombatCooldownTurns, 10);
-  const hasInCombatCooldown =
-    Number.isFinite(inCombatTurns) && inCombatTurns > 0;
+  const inCombatTurns = evaluateTurns(inCombatCooldownTurns);
+  const hasInCombatCooldown = inCombatTurns > 0;
   const outCombatMinutes = timeStringToMinutes(outCombatCooldown);
   const hasOutCombatCooldown = outCombatMinutes > 0;
-  const inCombatDuration = Number.parseInt(inCombatDurationTurns, 10);
-  const hasInCombatDuration =
-    Number.isFinite(inCombatDuration) && inCombatDuration > 0;
+  const inCombatDuration = evaluateTurns(inCombatDurationTurns);
+  const hasInCombatDuration = inCombatDuration > 0;
   const outCombatDurationMinutes = timeStringToMinutes(outCombatDuration);
   const hasOutCombatDuration = outCombatDurationMinutes > 0;
 
@@ -332,14 +550,12 @@ export const playerUseSkillOutOfCombat = (
   inCombatDurationTurns: string,
   outCombatDuration: string,
 ) => {
-  const inCombatTurns = Number.parseInt(inCombatCooldownTurns, 10);
-  const hasInCombatCooldown =
-    Number.isFinite(inCombatTurns) && inCombatTurns > 0;
+  const inCombatTurns = evaluateTurns(inCombatCooldownTurns);
+  const hasInCombatCooldown = inCombatTurns > 0;
   const outCombatMinutes = timeStringToMinutes(outCombatCooldown);
   const hasOutCombatCooldown = outCombatMinutes > 0;
-  const inCombatDuration = Number.parseInt(inCombatDurationTurns, 10);
-  const hasInCombatDuration =
-    Number.isFinite(inCombatDuration) && inCombatDuration > 0;
+  const inCombatDuration = evaluateTurns(inCombatDurationTurns);
+  const hasInCombatDuration = inCombatDuration > 0;
   const outCombatDurationMinutes = timeStringToMinutes(outCombatDuration);
   const hasOutCombatDuration = outCombatDurationMinutes > 0;
 
