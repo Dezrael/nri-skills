@@ -3,6 +3,7 @@ import { PlayerSkill } from "../../../types/PlayerSkill";
 import {
   clearSkillCooldownField,
   setSkillCooldownField,
+  setSkillCurrentCharges,
   consumeSkillCharge,
   getCooldown,
   getSkillCharges,
@@ -49,6 +50,8 @@ const SkillCard: React.FC<SkillCardProps> = ({
   const [editDays, setEditDays] = useState(0);
   const [editHours, setEditHours] = useState(0);
   const [editMins, setEditMins] = useState(0);
+  const [editChargesOpen, setEditChargesOpen] = useState(false);
+  const [editChargesCurrent, setEditChargesCurrent] = useState(0);
 
   useEffect(() => {
     setCooldown(getCooldown(className, skill.name));
@@ -56,13 +59,13 @@ const SkillCard: React.FC<SkillCardProps> = ({
   }, [className, skill.name, skill.outCombatCharges, cooldownVersion]);
 
   useEffect(() => {
-    if (!editField) return;
+    if (!editField && !editChargesOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [editField]);
+  }, [editField, editChargesOpen]);
 
   const openEditModal = (field: EditField) => {
     const cd = getCooldown(className, skill.name);
@@ -92,6 +95,24 @@ const SkillCard: React.FC<SkillCardProps> = ({
     setSkillCooldownField(className, skill.name, editField, value);
     setCooldown(getCooldown(className, skill.name));
     setEditField(null);
+  };
+
+  const openEditCharges = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const current = charges?.current ?? 0;
+    setEditChargesCurrent(current);
+    setEditChargesOpen(true);
+  };
+
+  const handleApplyCharges = () => {
+    const next = setSkillCurrentCharges(
+      className,
+      skill.name,
+      skill.outCombatCharges,
+      editChargesCurrent,
+    );
+    if (next) setCharges(next);
+    setEditChargesOpen(false);
   };
 
   const EDIT_FIELD_LABELS: Record<EditField, string> = {
@@ -299,12 +320,26 @@ const SkillCard: React.FC<SkillCardProps> = ({
           </div>
           <div className="cooldown">
             <span className="label">Использования:</span>
-            <span className={`value ${hasChargeLimit ? "charges-value" : ""}`}>
-              <span>{chargesDisplay}</span>
-              {hasChargeLimit && cooldownTypeDisplay && (
-                <span className="charge-reset-type">{cooldownTypeDisplay}</span>
-              )}
-            </span>
+            {hasChargeLimit && charges ? (
+              <button
+                type="button"
+                className={`value charges-value cooldown-badge-btn`}
+                onClick={openEditCharges}
+                aria-label="Изменить количество зарядов"
+              >
+                <span>{chargesDisplay}</span>
+                {cooldownTypeDisplay && (
+                  <span className="charge-reset-type">{cooldownTypeDisplay}</span>
+                )}
+              </button>
+            ) : (
+              <span className={`value ${hasChargeLimit ? "charges-value" : ""}`}>
+                <span>{chargesDisplay}</span>
+                {hasChargeLimit && cooldownTypeDisplay && (
+                  <span className="charge-reset-type">{cooldownTypeDisplay}</span>
+                )}
+              </span>
+            )}
           </div>
         </div>
 
@@ -522,17 +557,31 @@ const SkillCard: React.FC<SkillCardProps> = ({
           pluralizeTurns={pluralizeTurns}
         />
       )}
+    {editChargesOpen && charges && (
+      <ChargesEditModal
+        current={editChargesCurrent}
+        max={charges.max}
+        onChange={setEditChargesCurrent}
+        onSave={handleApplyCharges}
+        onClose={() => setEditChargesOpen(false)}
+      />
+    )}
     </>
   );
 };
 
-// --- Cooldown Edit Modal ---
+// ---------------------------------------------------------------------------
+// CooldownEditModal
+// ---------------------------------------------------------------------------
+
+type EditField =
+  | "inCombatTurns"
+  | "outCombatMinutes"
+  | "durationInCombatTurns"
+  | "durationOutCombatMinutes";
+
 const CooldownEditModal: React.FC<{
-  field:
-    | "inCombatTurns"
-    | "outCombatMinutes"
-    | "durationInCombatTurns"
-    | "durationOutCombatMinutes";
+  field: EditField;
   label: string;
   editTurns: number;
   setEditTurns: React.Dispatch<React.SetStateAction<number>>;
@@ -725,6 +774,97 @@ const CooldownEditModal: React.FC<{
               </div>
             </div>
           )}
+        </div>
+
+        <div className="cd-edit-footer">
+          <button type="button" className="cd-save-btn" onClick={onSave}>
+            Сохранить
+          </button>
+          <button type="button" className="cd-reset-btn" onClick={onClose}>
+            Отмена
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// ChargesEditModal
+// ---------------------------------------------------------------------------
+
+interface ChargesEditModalProps {
+  current: number;
+  max: number;
+  onChange: (v: number) => void;
+  onSave: () => void;
+  onClose: () => void;
+}
+
+const ChargesEditModal: React.FC<ChargesEditModalProps> = ({
+  current,
+  max,
+  onChange,
+  onSave,
+  onClose,
+}) => {
+  return (
+    <div
+      className="cd-edit-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Изменить заряды"
+    >
+      <div className="cd-edit-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="cd-edit-header">
+          <span className="cd-edit-title">Использования</span>
+          <button
+            type="button"
+            className="cd-edit-close"
+            onClick={onClose}
+            aria-label="Закрыть"
+          >
+            <span className="material-symbols-rounded" aria-hidden="true">
+              close
+            </span>
+          </button>
+        </div>
+
+        <div className="cd-edit-body">
+          <div className="cd-charges-max-label">макс. {max}</div>
+          <div className="cd-turns-row">
+            <button
+              type="button"
+              className="cd-step-btn"
+              onClick={() => onChange(Math.max(0, current - 1))}
+              aria-label="Уменьшить на 1"
+            >
+              −1
+            </button>
+            <input
+              type="number"
+              className="cd-turns-input"
+              inputMode="numeric"
+              min={0}
+              max={max}
+              value={current}
+              onChange={(e) =>
+                onChange(
+                  Math.max(0, Math.min(max, Math.floor(Number(e.target.value) || 0))),
+                )
+              }
+              aria-label="Текущие заряды"
+            />
+            <button
+              type="button"
+              className="cd-step-btn"
+              onClick={() => onChange(Math.min(max, current + 1))}
+              aria-label="Увеличить на 1"
+            >
+              +1
+            </button>
+          </div>
         </div>
 
         <div className="cd-edit-footer">

@@ -377,6 +377,22 @@ export const restoreSkillCharges = (
   return restoredCharges;
 };
 
+export const setSkillCurrentCharges = (
+  className: string,
+  skillName: string,
+  maxCharges: string,
+  newCurrent: number,
+): SkillChargesData | null => {
+  const parsedMax = parseMaxCharges(maxCharges);
+  if (parsedMax === null) return null;
+  const clamped = Math.max(0, Math.min(parsedMax, Math.floor(newCurrent)));
+  const next: SkillChargesData = { current: clamped, max: parsedMax };
+  const allCharges = getAllSkillCharges();
+  allCharges[getSkillKey(className, skillName)] = next;
+  saveAllSkillCharges(allCharges);
+  return next;
+};
+
 // Установить перезарядку заклинания
 export const setCooldown = (
   className: string,
