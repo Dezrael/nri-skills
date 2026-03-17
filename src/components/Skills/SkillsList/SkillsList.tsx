@@ -9,6 +9,7 @@ import {
   skipTime,
 } from "../../../utils/cooldownManager";
 import Tabs from "../../Tabs/Tabs";
+import TimeAdjustModal from "../TimeAdjustModal/TimeAdjustModal";
 import "./SkillsList.css";
 
 interface SkillsListProps {
@@ -401,6 +402,13 @@ const SkillsList: React.FC<SkillsListProps> = ({
     setPendingRestType(null);
   };
 
+  const handleCloseTimeModal = () => {
+    setShowTimeModal(false);
+    setDays(0);
+    setHours(0);
+    setMinutes(0);
+  };
+
   const handleSkipTime = () => {
     const totalMinutes = days * 24 * 60 + hours * 60 + minutes;
     if (totalMinutes > 0) {
@@ -421,10 +429,7 @@ const SkillsList: React.FC<SkillsListProps> = ({
 
       skipTime(parts.join(" "));
       setCooldownKey((prev) => prev + 1); // Trigger re-render
-      setDays(0);
-      setHours(0);
-      setMinutes(0);
-      setShowTimeModal(false);
+      handleCloseTimeModal();
       setFeedbackMessage(`Прошло: ${parts.join(" ")}`);
     }
   };
@@ -624,154 +629,25 @@ const SkillsList: React.FC<SkillsListProps> = ({
       )}
 
       {showTimeModal && (
-        <div
-          className="time-modal-overlay"
-          onClick={() => setShowTimeModal(false)}
-        >
-          <div className="time-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Пропустить время</h3>
-            <p>Укажите период времени</p>
-
-            <div className="time-inputs-grid">
-              <div className="time-input-group">
-                <label htmlFor="days-input">Дни</label>
-                <div className="number-input-wrapper">
-                  <button
-                    type="button"
-                    className="number-btn decrease"
-                    onClick={() => setDays(Math.max(0, days - 1))}
-                  >
-                    −
-                  </button>
-                  <input
-                    id="days-input"
-                    type="number"
-                    min="0"
-                    max="365"
-                    value={days}
-                    onChange={(e) =>
-                      setDays(Math.max(0, parseInt(e.target.value) || 0))
-                    }
-                    className="time-number-input"
-                  />
-                  <button
-                    type="button"
-                    className="number-btn increase"
-                    onClick={() => setDays(Math.min(365, days + 1))}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div className="time-input-group">
-                <label htmlFor="hours-input">Часы</label>
-                <div className="number-input-wrapper">
-                  <button
-                    type="button"
-                    className="number-btn decrease"
-                    onClick={() => setHours(Math.max(0, hours - 1))}
-                  >
-                    −
-                  </button>
-                  <input
-                    id="hours-input"
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={hours}
-                    onChange={(e) =>
-                      setHours(
-                        Math.max(
-                          0,
-                          Math.min(23, parseInt(e.target.value) || 0),
-                        ),
-                      )
-                    }
-                    className="time-number-input"
-                  />
-                  <button
-                    type="button"
-                    className="number-btn increase"
-                    onClick={() => setHours(Math.min(23, hours + 1))}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div className="time-input-group">
-                <label htmlFor="minutes-input">Минуты</label>
-                <div className="number-input-wrapper">
-                  <button
-                    type="button"
-                    className="number-btn decrease"
-                    onClick={() => setMinutes(Math.max(0, minutes - 1))}
-                  >
-                    −
-                  </button>
-                  <input
-                    id="minutes-input"
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={minutes}
-                    onChange={(e) =>
-                      setMinutes(
-                        Math.max(
-                          0,
-                          Math.min(59, parseInt(e.target.value) || 0),
-                        ),
-                      )
-                    }
-                    className="time-number-input"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    className="number-btn increase"
-                    onClick={() => setMinutes(Math.min(59, minutes + 1))}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-actions">
-              <button
-                onClick={handleSkipTime}
-                className="confirm-btn"
-                disabled={days === 0 && hours === 0 && minutes === 0}
-              >
-                <span
-                  className="material-symbols-rounded btn-icon"
-                  aria-hidden="true"
-                >
-                  done
-                </span>
-                Пропустить
-              </button>
-              <button
-                onClick={() => {
-                  setShowTimeModal(false);
-                  setDays(0);
-                  setHours(0);
-                  setMinutes(0);
-                }}
-                className="cancel-btn"
-              >
-                <span
-                  className="material-symbols-rounded btn-icon"
-                  aria-hidden="true"
-                >
-                  close
-                </span>
-                Отмена
-              </button>
-            </div>
-          </div>
-        </div>
+        <TimeAdjustModal
+          mode="time"
+          title="Пропустить время"
+          description="Укажите период времени"
+          days={days}
+          onDaysChange={setDays}
+          hours={hours}
+          onHoursChange={setHours}
+          minutes={minutes}
+          onMinutesChange={setMinutes}
+          maxDays={365}
+          maxHours={23}
+          maxMinutes={59}
+          autoFocusField="minutes"
+          saveLabel="Пропустить"
+          saveDisabled={days === 0 && hours === 0 && minutes === 0}
+          onSave={handleSkipTime}
+          onClose={handleCloseTimeModal}
+        />
       )}
 
       <div className="skills-list">

@@ -11,6 +11,7 @@ import {
   playerUseSkillOutOfCombat,
   minutesToTimeString,
 } from "../../../utils/cooldownManager";
+import TimeAdjustModal from "../TimeAdjustModal/TimeAdjustModal";
 import "./SkillCard.css";
 
 interface SkillCardProps {
@@ -215,9 +216,6 @@ const SkillCard: React.FC<SkillCardProps> = ({
     outCombatMinutes: "Перезарядка вне боя",
     durationOutCombatMinutes: "Длительность вне боя",
   };
-
-  const pluralizeTurns = (n: number) =>
-    n === 1 ? "ход" : n >= 2 && n <= 4 ? "хода" : "ходов";
 
   const handleUseInCombat = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -666,23 +664,31 @@ const SkillCard: React.FC<SkillCardProps> = ({
         </div>
       </div>
 
-      {editField && (
-        <CooldownEditModal
-          field={editField}
-          label={EDIT_FIELD_LABELS[editField]}
-          editTurns={editTurns}
-          setEditTurns={setEditTurns}
-          editDays={editDays}
-          setEditDays={setEditDays}
-          editHours={editHours}
-          setEditHours={setEditHours}
-          editMins={editMins}
-          setEditMins={setEditMins}
-          onSave={handleApplyEdit}
-          onClose={() => setEditField(null)}
-          pluralizeTurns={pluralizeTurns}
-        />
-      )}
+      {editField &&
+        (editField === "inCombatTurns" ||
+        editField === "durationInCombatTurns" ? (
+          <TimeAdjustModal
+            mode="turns"
+            title={EDIT_FIELD_LABELS[editField]}
+            value={editTurns}
+            onChange={setEditTurns}
+            onSave={handleApplyEdit}
+            onClose={() => setEditField(null)}
+          />
+        ) : (
+          <TimeAdjustModal
+            mode="time"
+            title={EDIT_FIELD_LABELS[editField]}
+            days={editDays}
+            onDaysChange={setEditDays}
+            hours={editHours}
+            onHoursChange={setEditHours}
+            minutes={editMins}
+            onMinutesChange={setEditMins}
+            onSave={handleApplyEdit}
+            onClose={() => setEditField(null)}
+          />
+        ))}
       {editChargesOpen && charges && (
         <ChargesEditModal
           current={editChargesCurrent}
@@ -693,225 +699,6 @@ const SkillCard: React.FC<SkillCardProps> = ({
         />
       )}
     </>
-  );
-};
-
-// ---------------------------------------------------------------------------
-// CooldownEditModal
-// ---------------------------------------------------------------------------
-
-type EditField =
-  | "inCombatTurns"
-  | "outCombatMinutes"
-  | "durationInCombatTurns"
-  | "durationOutCombatMinutes";
-
-const CooldownEditModal: React.FC<{
-  field: EditField;
-  label: string;
-  editTurns: number;
-  setEditTurns: React.Dispatch<React.SetStateAction<number>>;
-  editDays: number;
-  setEditDays: React.Dispatch<React.SetStateAction<number>>;
-  editHours: number;
-  setEditHours: React.Dispatch<React.SetStateAction<number>>;
-  editMins: number;
-  setEditMins: React.Dispatch<React.SetStateAction<number>>;
-  onSave: () => void;
-  onClose: () => void;
-  pluralizeTurns: (n: number) => string;
-}> = ({
-  field,
-  label,
-  editTurns,
-  setEditTurns,
-  editDays,
-  setEditDays,
-  editHours,
-  setEditHours,
-  editMins,
-  setEditMins,
-  onSave,
-  onClose,
-  pluralizeTurns,
-}) => {
-  const isTurns =
-    field === "inCombatTurns" || field === "durationInCombatTurns";
-
-  return (
-    <div
-      className="cd-edit-overlay"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={label}
-    >
-      <div className="cd-edit-panel" onClick={(e) => e.stopPropagation()}>
-        <div className="cd-edit-header">
-          <span className="cd-edit-title">{label}</span>
-          <button
-            type="button"
-            className="cd-edit-close"
-            onClick={onClose}
-            aria-label="Закрыть"
-          >
-            <span className="material-symbols-rounded" aria-hidden="true">
-              close
-            </span>
-          </button>
-        </div>
-
-        <div className="cd-edit-body">
-          {isTurns ? (
-            <div className="cd-turns-row">
-              <button
-                type="button"
-                className="cd-step-btn"
-                onClick={() => setEditTurns((t) => Math.max(0, t - 1))}
-                aria-label="Уменьшить на 1 ход"
-              >
-                −1
-              </button>
-              <input
-                type="number"
-                className="cd-turns-input"
-                inputMode="numeric"
-                min={0}
-                value={editTurns}
-                onChange={(e) =>
-                  setEditTurns(
-                    Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                  )
-                }
-                aria-label="Количество ходов"
-              />
-              <button
-                type="button"
-                className="cd-step-btn"
-                onClick={() => setEditTurns((t) => t + 1)}
-                aria-label="Увеличить на 1 ход"
-              >
-                +1
-              </button>
-            </div>
-          ) : (
-            <div className="cd-time-grid">
-              <div className="cd-time-unit">
-                <button
-                  type="button"
-                  className="cd-step-btn"
-                  onClick={() => setEditDays((d) => Math.max(0, d - 1))}
-                  aria-label="День −1"
-                >
-                  −
-                </button>
-                <div className="cd-time-value">
-                  <input
-                    type="number"
-                    className="cd-time-input"
-                    inputMode="numeric"
-                    min={0}
-                    value={editDays}
-                    onChange={(e) =>
-                      setEditDays(
-                        Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                      )
-                    }
-                    aria-label="Дни"
-                  />
-                  <span className="cd-time-label">дн.</span>
-                </div>
-                <button
-                  type="button"
-                  className="cd-step-btn"
-                  onClick={() => setEditDays((d) => d + 1)}
-                  aria-label="День +1"
-                >
-                  +
-                </button>
-              </div>
-              <div className="cd-time-unit">
-                <button
-                  type="button"
-                  className="cd-step-btn"
-                  onClick={() => setEditHours((h) => Math.max(0, h - 1))}
-                  aria-label="Час −1"
-                >
-                  −
-                </button>
-                <div className="cd-time-value">
-                  <input
-                    type="number"
-                    className="cd-time-input"
-                    inputMode="numeric"
-                    min={0}
-                    value={editHours}
-                    onChange={(e) =>
-                      setEditHours(
-                        Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                      )
-                    }
-                    aria-label="Часы"
-                  />
-                  <span className="cd-time-label">ч.</span>
-                </div>
-                <button
-                  type="button"
-                  className="cd-step-btn"
-                  onClick={() => setEditHours((h) => h + 1)}
-                  aria-label="Час +1"
-                >
-                  +
-                </button>
-              </div>
-              <div className="cd-time-unit">
-                <button
-                  type="button"
-                  className="cd-step-btn"
-                  onClick={() => setEditMins((m) => Math.max(0, m - 1))}
-                  aria-label="Минута −1"
-                >
-                  −
-                </button>
-                <div className="cd-time-value">
-                  <input
-                    type="number"
-                    className="cd-time-input"
-                    inputMode="numeric"
-                    min={0}
-                    value={editMins}
-                    onChange={(e) =>
-                      setEditMins(
-                        Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                      )
-                    }
-                    aria-label="Минуты"
-                  />
-                  <span className="cd-time-label">мин.</span>
-                </div>
-                <button
-                  type="button"
-                  className="cd-step-btn"
-                  onClick={() => setEditMins((m) => m + 1)}
-                  aria-label="Минута +1"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="cd-edit-footer">
-          <button type="button" className="cd-save-btn" onClick={onSave}>
-            Сохранить
-          </button>
-          <button type="button" className="cd-reset-btn" onClick={onClose}>
-            Отмена
-          </button>
-        </div>
-      </div>
-    </div>
   );
 };
 

@@ -618,82 +618,129 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
 .time-modal {
-  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
-  border: 2px solid rgba(102, 126, 234, 0.5);
+  background: #1e1e2e;
+  border: 1px solid rgba(102, 126, 234, 0.35);
   border-radius: 12px;
-  padding: 2rem;
-  max-width: 400px;
-  width: 90%;
+  max-width: 320px;
+  width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.time-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem 0.7rem;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
 }
 
 .time-modal h3 {
-  margin: 0 0 1rem 0;
-  color: #667eea;
-  font-size: 1.3rem;
+  margin: 0;
+  color: #a0b6ff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.time-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #a0b6ff;
+  cursor: pointer;
+  border-radius: 6px;
+  opacity: 0.7;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+.time-modal-close:hover {
+  opacity: 1;
+  background: rgba(102, 126, 234, 0.15);
+}
+
+.time-modal-close .material-symbols-rounded {
+  font-size: 1.2rem;
+}
+
+.time-modal-body {
+  padding: 1.4rem 1.2rem 1rem;
 }
 
 .time-modal p {
-  margin: 0 0 1.5rem 0;
-  color: #a0a0a0;
-  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+  color: rgba(200, 200, 220, 0.55);
+  font-size: 0.86rem;
 }
 
 /* Сетка для числовых полей */
 .time-inputs-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
   width: 100%;
 }
 
 .time-input-group {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  min-width: 0; /* Предотвращает переполнение */
-}
-
-.time-input-group label {
-  color: #a0a0a0;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-  white-space: nowrap;
+  gap: 0;
+  min-width: 0;
 }
 
 /* Обертка для input и кнопок */
 .number-input-wrapper {
   display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
 }
 
 .time-number-input {
-  flex: 1;
+  width: 100%;
   min-width: 0;
-  padding: 0.75rem 0.25rem;
-  border: 2px solid rgba(102, 126, 234, 0.3);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.2rem;
+  border: none;
+  background: transparent;
   color: #e0e0e0;
-  font-size: 1.1rem;
+  font-size: 1.6rem;
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
   transition: all 0.2s ease;
   box-sizing: border-box;
   appearance: textfield;
   -moz-appearance: textfield;
+  line-height: 1.2;
+}
+
+.time-number-unit {
+  display: block;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #6677aa;
+  text-transform: uppercase;
+  padding-bottom: 0.25rem;
 }
 
 /* Скрываем стрелочки браузера */
@@ -705,57 +752,55 @@
 
 .time-number-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-}
-
-.time-number-input:hover {
-  border-color: rgba(102, 126, 234, 0.6);
+  background: rgba(102, 126, 234, 0.1);
 }
 
 /* Кнопки +/- */
 .number-btn {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border: 2px solid rgba(102, 126, 234, 0.4);
-  border-radius: 6px;
-  background: rgba(102, 126, 234, 0.15);
+  width: 100%;
+  padding: 0.55rem 0;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  background: rgba(102, 126, 234, 0.08);
   color: #a0b6ff;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   line-height: 1;
+  -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
-.number-btn:hover {
-  background: rgba(102, 126, 234, 0.3);
-  border-color: #667eea;
-  transform: scale(1.05);
-}
-
-.number-btn:active {
-  transform: scale(0.95);
-  background: rgba(102, 126, 234, 0.4);
-}
-
 .number-btn.decrease {
-  font-size: 1.5rem;
+  border-top: 1px solid rgba(102, 126, 234, 0.2);
 }
 
 .number-btn.increase {
-  font-size: 1.2rem;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.number-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+.number-btn:active {
+  background: rgba(102, 126, 234, 0.32);
 }
 
 .modal-actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.6rem;
+}
+
+.time-modal-actions {
+  padding: 0.8rem 1.2rem 1.1rem;
+  border-top: 1px solid rgba(102, 126, 234, 0.15);
 }
 
 .confirm-btn,
@@ -763,60 +808,59 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
   flex: 1;
-  padding: 0.75rem;
+  padding: 0.65rem 0.75rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
-  transition: all 0.3s ease;
-}
-
-.btn-icon {
-  font-size: 1.1rem;
-  line-height: 1;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s;
+  letter-spacing: 0.01em;
 }
 
 .confirm-btn {
-  background: rgba(34, 139, 34, 0.2);
-  border: 2px solid #228b22;
-  color: #32cd32;
+  background: rgba(102, 126, 234, 0.22);
+  border: 1px solid rgba(102, 126, 234, 0.55);
+  color: #b8c8ff;
 }
 
 .confirm-btn:hover:not(:disabled) {
-  background: rgba(34, 139, 34, 0.3);
-  transform: translateY(-1px);
+  background: rgba(102, 126, 234, 0.36);
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.25);
 }
 
 .confirm-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .cancel-btn {
-  background: rgba(220, 53, 69, 0.2);
-  border: 2px solid #dc3545;
-  color: #ff6b7a;
+  border: 1px solid rgba(220, 80, 80, 0.45);
+  background: rgba(220, 80, 80, 0.1);
+  color: #fca5a5;
 }
 
 .cancel-btn:hover {
-  background: rgba(220, 53, 69, 0.3);
-  transform: translateY(-1px);
+  background: rgba(220, 80, 80, 0.22);
 }
 
 @media (max-width: 768px) {
-  .time-modal {
-    padding: 1.5rem;
+  .time-modal-body {
+    padding: 1rem 1rem 0.85rem;
   }
 
   .time-inputs-grid {
+    display: grid;
     grid-template-columns: 1fr;
     gap: 0.75rem;
   }
 
-  .modal-actions {
+  .time-modal-actions {
     flex-direction: column;
+    padding: 0.75rem 1rem 1rem;
   }
 }
