@@ -329,14 +329,20 @@ const SkillCard: React.FC<SkillCardProps> = ({
               >
                 <span>{chargesDisplay}</span>
                 {cooldownTypeDisplay && (
-                  <span className="charge-reset-type">{cooldownTypeDisplay}</span>
+                  <span className="charge-reset-type">
+                    {cooldownTypeDisplay}
+                  </span>
                 )}
               </button>
             ) : (
-              <span className={`value ${hasChargeLimit ? "charges-value" : ""}`}>
+              <span
+                className={`value ${hasChargeLimit ? "charges-value" : ""}`}
+              >
                 <span>{chargesDisplay}</span>
                 {hasChargeLimit && cooldownTypeDisplay && (
-                  <span className="charge-reset-type">{cooldownTypeDisplay}</span>
+                  <span className="charge-reset-type">
+                    {cooldownTypeDisplay}
+                  </span>
                 )}
               </span>
             )}
@@ -557,15 +563,15 @@ const SkillCard: React.FC<SkillCardProps> = ({
           pluralizeTurns={pluralizeTurns}
         />
       )}
-    {editChargesOpen && charges && (
-      <ChargesEditModal
-        current={editChargesCurrent}
-        max={charges.max}
-        onChange={setEditChargesCurrent}
-        onSave={handleApplyCharges}
-        onClose={() => setEditChargesOpen(false)}
-      />
-    )}
+      {editChargesOpen && charges && (
+        <ChargesEditModal
+          current={editChargesCurrent}
+          max={charges.max}
+          onChange={setEditChargesCurrent}
+          onSave={handleApplyCharges}
+          onClose={() => setEditChargesOpen(false)}
+        />
+      )}
     </>
   );
 };
@@ -851,7 +857,10 @@ const ChargesEditModal: React.FC<ChargesEditModalProps> = ({
               value={current}
               onChange={(e) =>
                 onChange(
-                  Math.max(0, Math.min(max, Math.floor(Number(e.target.value) || 0))),
+                  Math.max(
+                    0,
+                    Math.min(max, Math.floor(Number(e.target.value) || 0)),
+                  ),
                 )
               }
               aria-label="Текущие заряды"
